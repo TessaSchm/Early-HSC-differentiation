@@ -1,8 +1,8 @@
 ### [Package versioning](#tab/)
 
-- Analysis were performed using R version 4.3.3 (2024-02-29)
-
 [R packages used for data analysis section 01](01_Data_processing_and_transformation)
+
+- Analysis were performed using R version 4.2.0 (2022-04-22)
 ```
 Biobase              2.56.0
 BiocGenerics         0.42.0
@@ -42,6 +42,8 @@ tibble               3.1.8
 ```
 
 [R packages used for data analysis section 02](02_Data_analysis_and_visualization)
+
+- Analysis were performed using R version 4.3.3 (2024-02-29)
 ```
 abind               1.4-5
 aod                 1.3.3
