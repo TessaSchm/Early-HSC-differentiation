@@ -49,6 +49,7 @@ SingleCellExperiment  1.24.0
 sp                    2.1-3
 stringr               1.5.1
 SummarizedExperiment  1.26.1
+Slingshot             2.10.0
 tibble                3.2.1
 tibble                3.1.8
 tidyr                 1.3.1
