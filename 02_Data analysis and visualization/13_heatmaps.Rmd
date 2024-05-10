@@ -1,0 +1,142 @@
+---
+title: "Heatmaps"
+output: html_document
+date: "2024-05-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load libraries
+library(tidyverse)
+library(Seurat)
+library(condiments)
+library(destiny)
+library(dittoSeq)
+library(RColorBrewer)
+library(gridExtra)
+library(ggplot2)
+library(ggrepel)
+library(data.table)
+library(scuttle)
+library(viridis)
+```
+
+```{r}
+#load seurat 
+dat <- readRDS ("03_dat_seuratObj.rds")
+```
+
+
+## 1. Heatmaps of LSC-17 
+```{r}
+#define gene lists
+LSC_17_genes <- c("ADGRG1", "AKR1C3", "BEX3", "CD34", "FAM30A", "EMP1", "SMIM24", "SOCS2", "CPXM1", "CDK6", "DPYSL3", "MMRN1", "LAPTM4B", "ARHGAP22", "NYNRIN", "ZBTB46", "DNMT3B")
+
+# Define the clusters you want to include in the heatmap
+clusters_of_interest <- c("HSC-1", "HSC-2", "MPP")
+
+# Create a Seurat object with only the specified clusters and genes
+dat_filtered <- subset(dat, cells = colnames(dat)[dat$Manual_Label %in% clusters_of_interest])
+
+dat_HSC1_2_MPP  <- as.SingleCellExperiment(dat_filtered)
+
+aggregate_dat_HSC1_HSC2_MPP <- aggregateAcrossCells(
+  dat_HSC1_2_MPP,
+  ids = dat_HSC1_2_MPP$Manual_Label,
+  statistics = "mean",
+  subset.row = rownames(dat_HSC1_2_MPP)
+)
+
+Heatmap_LSC_17 <- dittoHeatmap(aggregate_dat_HSC1_HSC2_MPP,
+             genes = LSC_17_genes, 
+             annot.by = c("Manual_Label"),
+             cells.use = c("HSC-1", "HSC-2", "MPP"),
+             scaled.to.max =  TRUE,
+             heatmap.colors.max.scaled = inferno(100),
+             annotation_colors = list(Manual_Label = c("HSC-1" = "#F8766D", "HSC-2" = "#D39200", "MPP" = "#00BA38")))
+
+#ggsave("Heatmap_LSC_17.pdf", Heatmap_LSC_17, width = 10, height = 35)
+
+```
+
+## 2. Heatmap of CHIP genes
+```{r}
+CHIP_genes <- c(
+  "FLT3", "ASXL1", "CALR", "GATA2", "KIT", "MLL", "PHF6", "SMC1A", "SRSF2", "ABL1",
+  "ATRX", "BCOR", "BCORL1", "BRAF", "CBL", "CBLB", "CBLC", "CDKN2A", "CEBPA", "CSF3R",
+  "CUX1", "DNMT3A", "ETV6/TEL", "EZH2", "FBXW7", "GATA1", "GNAS", "GNB1", "HRAS", "IDH1",
+  "IDH2", "IKZF1", "JAK2", "JAK3", "KDM6A", "KRAS", "MPL", "MYD88", "NOTCH1", "NPM1",
+  "NRAS", "PDGFRA", "PPM1D", "PTEN", "PTPN11", "RAD21", "RUNX1", "SETBP1", "SF3B1",
+  "SMC3", "STAG2", "TET2", "TP53", "U2AF1", "WT1", "ZRSR2")
+
+Heatmap_CHIP_genes <- dittoHeatmap(aggregate_dat_HSC1_HSC2_MPP,
+             genes = CHIP_genes, 
+             annot.by = c("Manual_Label"),
+             cells.use = c("HSC-1", "HSC-2", "MPP"),
+             scaled.to.max =  TRUE,
+             heatmap.colors.max.scaled = inferno(100),
+             annotation_colors = list(Manual_Label = c("HSC-1" = "#F8766D", "HSC-2" = "#D39200", "MPP" = "#00BA38")))
+
+#ggsave("Heatmap_CHIP_genes.pdf", Heatmap_CHIP, width = 10, height = 25)
+```
+
+```{r}
+#load seurat 
+CD45negativeCD273pos <- readRDS ("05_dat_CD45negCD273pos_seuratObj.rds")
+CD45negativeCD273negative <- readRDS ("06_dat_CD45negCD273neg_seuratObj.rds")
+```
+
+
+## 3. Heatmap of HSC1-subsets gated CD273+/CD273- (CD34+CD38-CD45RA-)
+```{r}
+
+Genes_HSC <- c("HOPX", "DLK1", "THY1", "MPL", "MLLT3", "HLF", "ADGRG6", "CDK6", "GUCY1A3", "KLF4", "BEX1" )
+
+DefaultAssay(CD45negativeCD273pos) <- "RNA"
+
+CD45negativeCD273pos_2 <- as.SingleCellExperiment(CD45negativeCD273pos)
+
+celltype_mean_5 <- aggregateAcrossCells(as(CD45negativeCD273pos_2, "SingleCellExperiment"),  
+                     ids = rep(1, ncol(CD45negativeCD273pos_2)), 
+                     statistics = "mean",
+                     subset.row = rownames(CD45negativeCD273pos_2))
+
+DefaultAssay(CD45negativeCD273negative) <- "RNA"
+
+CD45negativeCD273neg_2 <- as.SingleCellExperiment(CD45negativeCD273negative)
+
+celltype_mean_6 <- aggregateAcrossCells(as(CD45negativeCD273neg_2, "SingleCellExperiment"),  
+                     ids = rep(1, ncol(CD45negativeCD273neg_2)), 
+                     statistics = "mean",
+                     subset.row = rownames(CD45negativeCD273neg_2))
+
+
+# Combine both experiments into one
+combined_CD273_2 <-cbind(celltype_mean_5, celltype_mean_6)
+
+new_colnames <- c("CD273pos", "CD273neg")
+
+# Set new column names
+colnames(combined_CD273_2) <- new_colnames
+
+# Create a heatmap with only two columns
+pdf("heatmap_CD273.pdf", width = 3, height = 4.5)
+
+dittoHeatmap(combined_CD273_2,
+            genes = Genes_HSC,
+            order.by = Genes_HSC,
+            show_colnames = TRUE,
+            scaled.to.max = TRUE,
+            heatmap.colors.max.scaled = inferno(100))
+
+```
+
+## 4. Save RDS file
+```{r}
+saveRDS(dat_HSC1_2_MPP,"08_dat_HSC1_HSC2_MPP_seuratObj.rds")
+saveRDS(combined_CD273,"09_dat_aggregatedCD273.rds")
+```
+

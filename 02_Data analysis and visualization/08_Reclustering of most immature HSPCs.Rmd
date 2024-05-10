@@ -1,0 +1,207 @@
+---
+title: "Reclustering of most immature HSPCs"
+output: html_document
+date: "2024-05-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load libraries
+library(tidyverse)
+library(Seurat)
+library(condiments)
+library(slingshot)
+library(destiny)
+library(dittoSeq)
+library(dplyr)
+library(tidyr)
+library(missMDA)
+library(dismo)
+library(RColorBrewer)
+library(gridExtra)
+library(tradeSeq)
+```
+
+```{r}
+#load input data
+#Input data: Cells from cluster 0 1 5 6 7 9 17 18 from previous analysis
+dat <- readRDS ("trajectory_input_cells.rds")
+
+# specify the default assays as "mrna_cca".
+DefaultAssay(dat)<-"mrna_cca"
+```
+
+The below samples are the sorted immature populaiton (spike-in). They are removed from the downstream analysis.
+
+old18_CD34CD38_hs
+old12_CD34CD38_hs
+old4_CD34CD38_hs
+old19_CD34CD38_hs
+midage14_hs
+midage2_hs
+midage11_hs
+midage8_hs
+midage10_hs
+midage15_hs
+
+After removing the spike-in samples, PCA and clustering are recalculated.
+
+
+## 1. Remove spike-in
+```{r}
+# change identity
+Idents(dat)<-dat$sample
+
+# subset samples
+dat <- subset(dat, idents = c("old18_CD34CD38_hs","old12_CD34CD38_hs","old4_CD34CD38_hs","old19_CD34CD38_hs", "midage14_hs","midage2_hs","midage11_hs","midage8_hs","midage10_hs","midage15_hs"), invert=T)
+
+# # double check the subset
+# dat$sample %>% unique()
+```
+
+## 2. Recalculate PCA
+```{r}
+# Recalculate PCA and find optimal number of PCs
+# the recalculated PCA is stored in the default - dat@reductions$pca
+dat <- RunPCA(dat, npcs = 50, verbose = FALSE, approx = TRUE)
+
+# get features with variance > 0
+dat_varFeature <- PrepDR(object = dat, genes.use = VariableFeatures(object = dat), use.imputed = F, assay.type = "mrna_cca")
+
+# # find the optimal number of PCs
+
+nPC_dat <- PCA_estimate_nPC(dat_varFeature, whereto="rdata/01_nPC.rds", by.nPC=1, to.nPC = 50)
+```
+
+## 3. Recluster cells with resolution 0.3 / 0.4 / 0.6
+```{r}
+# find neighbours
+dat <- FindNeighbors(dat, dims = 1:nPC_dat, verbose = FALSE)
+
+# find clusters under resolution 0.3/0.4/0.6
+# graph used: mrna_cca_snn
+dat <- FindClusters(dat, resolution = c(0.3, 0.4, 0.6), verbose = FALSE)
+
+# UMAP 
+dat <- RunUMAP(dat, dims = 1:nPC_dat)
+
+# Plot UMAP with resolution 0.3/0.4/0.6
+pdf("result/01_res_0.3_0.4_0.6.pdf", width = 20)
+p1 <- DimPlot(dat, group.by = "mrna_cca_snn_res.0.3")
+p2 <- DimPlot(dat, group.by = "mrna_cca_snn_res.0.4")
+p3 <- DimPlot(dat, group.by = "mrna_cca_snn_res.0.6")
+p1|p2|p3
+dev.off()
+
+# split clusters in umap
+pdf("result/02_res_0.3_0.4__0.6_split.pdf")
+p1 <- DimPlot(dat, group.by = "mrna_cca_snn_res.0.3", split.by = "mrna_cca_snn_res.0.3")
+p2 <- DimPlot(dat, group.by = "mrna_cca_snn_res.0.4", split.by = "mrna_cca_snn_res.0.4")
+p3 <- DimPlot(dat, group.by = "mrna_cca_snn_res.0.6", split.by = "mrna_cca_snn_res.0.6")
+grid.arrange(p1, p2, p3, nrow = 3)
+dev.off()
+
+saveRDS(dat,"rdata/02_dat_seuratObj.rds")
+```
+
+Resolution 0.4 is chosen for downstream analysis.
+
+## 4.FindAllMarkers
+```{r}
+# switch the default assay to RNA
+DefaultAssay(dat) <- "RNA"
+
+# change identity to mrna_cca_snn_res.0.4
+Idents(dat) <- dat$mrna_cca_snn_res.0.4
+
+# perform findAllMarkers with min.pct = 0.25
+findAllMarkers_res0.4_minPct0.25 <- FindAllMarkers(dat, assay = "RNA", only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, test.use = "wilcox")
+
+# perform findAllMarkers with min.pct = 0.05
+findAllMarkers_res0.4_minPct0.05 <- FindAllMarkers(dat, assay = "RNA", only.pos = TRUE, min.pct = 0.05, logfc.threshold = 0.25, test.use = "wilcox")
+
+# # save
+write_csv(findAllMarkers_res0.4_minPct0.25, file = "result/03_findAllMarkers_res0.4_minPct0.25.csv")
+write_csv(findAllMarkers_res0.4_minPct0.05, file = "result/03_findAllMarkers_res0.4_minPct0.05.csv")
+```
+
+Create pdf for UMAP gene expression.
+```{r}
+for (i in reclustered.findAllMarkers$gene) {
+  require(lattice)
+  pdf(paste("results/", i, "_findAllMarkers.pdf", sep = ""))
+  print(FeaturePlot(recluster, features = i))
+  dev.off()
+ }
+```
+
+## 5. Additional ploting- dotplot with AbSeq
+```{r}
+ DefaultAssay(dat) <- "ab"
+ 
+pdf("result/reclustering_yg/ab_dotplot.pdf", height = 15, width = 10)
+ DotPlot(recluster, features = row.names(recluster)) +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+   coord_flip()
+ dev.off()
+```
+
+## 6. Cluster composition - check number of cells in each cluster in each age group
+```{r}
+metaDat <- dat@meta.data
+
+# number of cells in each cluster in each group
+metaDat %>% 
+  dplyr::select(age_group, mrna_cca_snn_res.0.4) %>% 
+  group_by(age_group, mrna_cca_snn_res.0.4) %>% 
+  dplyr::summarise(len = length(age_group)) %>% 
+  ggplot(aes(fill=age_group, y=len, x=mrna_cca_snn_res.0.4)) + 
+    geom_bar(position="dodge", stat="identity")
+
+# stack bar plot: number of cells in each cluster in each group
+metaDat %>% 
+  dplyr::select(age_group, mrna_cca_snn_res.0.4) %>% 
+  group_by(age_group, mrna_cca_snn_res.0.4) %>% 
+  dplyr::summarise(len = length(age_group)) %>% 
+  ggplot(aes(fill=age_group, y=len, x=mrna_cca_snn_res.0.4)) + 
+    geom_bar(position="fill", stat="identity")
+```
+
+-- samples have varied number of cells => Normalize to total cell number of each sample
+```{r}
+# dot plot: Noramlized to the cell number of each sample
+sample_n <- metaDat %>% 
+  dplyr::select(sample) %>% 
+  group_by(sample) %>% 
+  dplyr::summarise(len = length(sample))
+
+cellNo_sample_cluster <- metaDat %>% 
+  dplyr::select(age_group, mrna_cca_snn_res.0.6, sample) %>% 
+  group_by(age_group, mrna_cca_snn_res.0.6, sample) %>% 
+  dplyr::summarise(len = length(age_group)) 
+
+cellNo_sample_cluster %>% 
+  left_join(., sample_n, by = "sample") %>% 
+  mutate(percentage = len.x/len.y) %>% 
+  ggplot(aes(mrna_cca_snn_res.0.6, percentage, fill = age_group)) +
+  geom_dotplot(binaxis='y', stackdir='center', 
+               position=position_dodge2(.6)) +
+  theme_classic()
+
+# # save
+# write_csv(cellNo_sample_cluster, file = "result/04_cellNo_sample_cluster.csv")
+
+cellNo_sample_cluster %>% 
+  filter(mrna_cca_snn_res.0.4 == 0) %>% 
+  .$len %>% 
+  sum()
+```
+
+## 7. Save seurat object for follow-up analysis
+```{r}
+saveRDS(dat,"rdata/02_dat_seuratObj.rds")
+```
+

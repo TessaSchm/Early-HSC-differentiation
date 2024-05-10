@@ -1,0 +1,74 @@
+---
+title: "Violin plots HSC-1"
+output: html_document
+date: "2024-05-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load libraries
+library(tidyverse)
+library(Seurat)
+library(condiments)
+library(destiny)
+library(dittoSeq)
+library(RColorBrewer)
+library(gridExtra)
+library(ggplot2)
+library(ggrepel)
+library(data.table)
+library(scuttle)
+library(viridis)
+```
+
+```{r}
+#load seurat 
+dat <- readRDS ("03_dat_seuratObj.rds")
+```
+
+## 1. Subset HSC-1 cluster
+```{r}
+
+DefaultAssay(dat) <- "RNA"
+Idents(dat) <-dat$Manual_Label
+
+# subset HSC-1
+dat_HSC_1 <- subset(dat, idents = c("HSC-1"))
+
+dat_HSC_1$age_group <- factor(x = dat_HSC_1$age_group, levels = c("young", "midage", "old"))
+
+df2_violinplot_new <- as.data.frame(dat_HSC_1@meta.data)
+```
+
+#Display upregulated genes of HSC1 cluster in different age groups
+```{r}
+# Genes upregulated in HSC1 cluster
+genes_list_HSC1 <- c("DLK1",  "HLF", "MECOM", "MLLT3","ZBTB4", "ATP1B1", "CRHBP", "ADGRG6", "SOCS2", "KLF4", "MPL", "BEX1")
+
+# Create and save a PDF file for each gene plot
+for (gene in genes_list_HSC1) {
+  df_subset <- df2_violinplot_new2[, c("age_group", gene)]  # Subset the data frame for each gene
+  
+  p <- ggplot(df_subset, aes(x = age_group, y = .data[[gene]], fill = age_group)) +
+    geom_violin(scale = "width") +
+    labs(x = NULL, y = paste("Expression Level of", gene)) +
+    scale_fill_manual(values = c("red", "blue", "green")) +
+    theme_classic() +
+    theme(legend.position = "none")
+  
+  # Define the PDF filename for each gene
+  pdf_filename <- paste(gene, "_plot.pdf", sep = "")
+  
+  # Save the plot as a PDF
+  ggsave(pdf_filename, plot = p, width = 7.5, height = 9)
+}
+
+#statistics were added from pseudobulk dataset
+```
+
+```{r}
+saveRDS(dat_HSC_1,"10_dat_HSC1.rds")
+```

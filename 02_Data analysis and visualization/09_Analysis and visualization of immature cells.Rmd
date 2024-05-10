@@ -1,0 +1,258 @@
+---
+title: "Cluster analysis and visualization"
+output: html_document
+date: "2024-05-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load libraries
+library(tidyverse)
+library(Seurat)
+library(condiments)
+library(slingshot)
+library(destiny)
+library(dittoSeq)
+library(dplyr)
+library(tidyr)
+library(missMDA)
+library(dismo)
+library(RColorBrewer)
+library(gridExtra)
+library(tradeSeq)
+library(ggplot2)
+library(ggrepel)
+library(data.table)
+library(EnhancedVolcano)
+library(scuttle)
+library(viridis)
+```
+
+```{r}
+#load seurat 
+dat <- readRDS ("/02_dat_seuratObj.rds")
+```
+
+## 1. Cluster annotation
+```{r}
+#important: use mrna_cca_snn_res.0.4 and not seurat clusters (otherwise we have 10 clusters, resolution 0.6)
+Idents(dat) <- dat$mrna_cca_snn_res.0.4
+
+
+dat$Manual_Label <- ""
+
+
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "0", "Manual_Label"] <- "HSC-1"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "1", "Manual_Label"] <- "HSC-2"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "2", "Manual_Label"] <- "GMP"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "3", "Manual_Label"] <- "MPP"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "4", "Manual_Label"] <- "MEP-1"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "5", "Manual_Label"] <- "MDP-1"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "6", "Manual_Label"] <- "MDP-2"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "7", "Manual_Label"] <- "MEP-2"
+dat@meta.data[dat$mrna_cca_snn_res.0.4 == "8", "Manual_Label"] <- "LYP"
+
+```
+
+## 2. Split seurat object into age groups 
+```{r}
+young <- SplitObject(dat, split.by = "age_group")$young
+midage <- SplitObject(dat, split.by = "age_group")$midage
+old <- SplitObject(dat, split.by = "age_group")$old
+```
+
+## 3. Reorder age groups
+```{r}
+#reorder age groups (we had midage always first)
+dat$age_group <- factor(x = dat$age_group, levels = c("young", "midage", "old"))
+```
+
+
+## 4. UMAP of different age groups
+```{r}
+#visualize age groups on UMAPS
+#one age group at a time
+
+Idents(dat) <- dat$age_group
+
+
+#young
+UMAP_HIGHLIGHT_YOUNG <- DimPlot(dat, 
+        cells.highlight = Cells(subset(dat, idents = "young")), 
+        cols.highlight = "red", sizes.highlight = 0.1, cols= "white") + NoLegend() +
+  NoAxes()
+#ggsave(UMAP_HIGHLIGHT_YOUNG)
+
+#midage
+UMAP_HIGHLIGHT_MID <- DimPlot(dat, 
+        cells.highlight = Cells(subset(dat, idents = "midage")), 
+        cols.highlight = "blue", sizes.highlight = 0.1, cols= "white") + NoLegend() +
+  NoAxes()
+#ggsave(UMAP_HIGHLIGHT_MID)
+
+
+#old
+UMAP_HIGHLIGHT_OLD <-DimPlot(dat, 
+        cells.highlight = Cells(subset(dat, idents = "old")), 
+        cols.highlight = "green", sizes.highlight = 0.1, cols= "white") + NoLegend() +
+  NoAxes()
+#ggsave(UMAP_HIGHLIGHT_OLD)
+```
+
+## 5. UMAP of immature cells (resolution 0.4)
+```{r}
+#New UMAP with labelboxes
+Idents(dat) <- dat$Manual_Label
+
+my_levels <- c("HSC-1", "HSC-2", "MEP-1", "MEP-2", "MPP", "GMP", "MDP-1", "MDP-2", "LYP")
+
+Idents(dat)<- factor(Idents(dat), levels = my_levels)
+
+UMAPimmature <- DimPlot(dat, label = T, label.box = T, repel = F, cols= c("#F8766D", "#D39200", "#00C19F", "#DB72FB", "#00BA38","#93AA00", "#00B9E3", "#619CFF", "#FF61C3" )) + NoLegend() + NoAxes()
+
+#ggsave(UMAPimmature)
+```
+
+## 6. Dotplot of selected genes 
+```{r}
+DefaultAssay(dat) <- "RNA"
+Idents(dat) <-dat$Manual_Label
+
+RNAplot <- DotPlot(dat, features = c("ISG20","MME", "HMGB1","FAM30A", "FLT3", "SPINK2", "SMIM24", "GINS2", "HDC", "CD74", "ACTB", "GPX1", "CYBB", "CD48", "CD93", "MYD88", "KLF4", "CTSH", "NCF2", "CD14", "FGR", "SKG1",  "PRG2", "RNASE2", "CLC", "FCER1A", "CPA3", "HAVCR2","CD4", "CEBPA", "CLEC12A", "CEBPE","CSF3R", "HBB" ,"HBA2", "HBA1", "AHSP","ALAS2", "TFRC", "GATA1", "CNRIP1", "CTNNBL1", "GATA2", "TPM1", "MPL", "VWF", "MEIS1", "PROM1",  "CD34", "CRHBP", "HOPX", "MLLT3", "HLF")) +
+theme(axis.text.x = element_text(angle = 45, hjust=1)) + scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral")))  +
+coord_flip()
+
+#ggsave(RNAplot,  width = 10, height = 15)
+```
+
+## 7. UMAP for selected genes
+```{r}
+DefaultAssay(dat) <- "RNA"
+
+selected_genes <- c("CDK6", "MYC")
+
+UMAP_selected_genes <- FeaturePlot(dat, features = selected_genes, reduction = "umap", ncol = 2) & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) & NoAxes()
+
+#ggsave(UMAP_selected_genes, width=8, height=2.7)
+```
+
+## 8. Subset agegroups for protein analysis
+```{r}
+# change identity
+Idents(dat)<-dat$sample
+
+# subset samples
+dat_mid_old <- subset(dat, cells=WhichCells(dat, expression = age_group == "young"), invert=TRUE)
+
+```
+
+## 9. Dotplot of all used Abseqs
+```{r}
+DefaultAssay(dat_mid_old) <- "Abseq_RSEC" 
+Idents(dat_mid_old) <-dat_mid_old$Manual_Label
+
+my_levels <- c("HSC-1", "HSC-2", "MEP-1", "MEP-2", "MPP", "GMP", "MDP-1", "MDP-2", "LYP")
+
+Idents(dat_mid_old)<- factor(Idents(dat_mid_old), levels = my_levels)
+
+abseqsplot <- DotPlot(dat_mid_old, features = c("CD274-AB", "CD124-AB", "CD19-AB", "CD10-AB", "CD25-AB", "CD22-AB", "CD45RA-AB", "CD62L-AB", "CD7-AB", "CD96-AB", "CD184-AB", "CD9-AB", "CD45RO-AB", "CD26-AB", "CD1a-AB", "CD15-AB", "CD14-AB", "CD13-AB", "B7-AB", "CD126-AB", "CD33-AB", "CD371-AB", "CD56-AB", "Tim3-AB", "CD93-AB", "CD11c-AB", "CD1c-AB", "CD47-AB", "CD123-AB", "CD32-AB", "CD38-AB", "HLA-AB.1", "HLA-AB", "CD235a-b-AB", "CD155-AB", "CD81-AB", "CD117-AB", "CD137-AB", "CD3-AB", "CD45-AB", "CD133-AB", "GPR56-AB", "CD90-AB", "CD34-AB", "CD273-AB")) +
+theme(axis.text.x = element_text(angle = 45, hjust=1)) + scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral")))  +
+coord_flip()
+
+#ggsave(abseqsplot,  width = 10, height = 15)
+```
+
+## 10. Violinplots of all used Abseqs 
+```{r}
+Abseqlist <- dat_mid_old@assays$Abseq_RSEC
+Abseqlist2 <- as.character(Abseqlist@counts@Dimnames[[1]])
+
+violinplots <-VlnPlot(dat_mid_old, features = Abseqlist2, pt.size=0, cols= c("#F8766D", "#D39200", "#00C19F","#DB72FB", "#00BA38",  "#93AA00", "#00B9E3", "#619CFF", "#FF61C3" ))+  NoLegend()
+
+#ggsave(violinplots, width = 17.5, height = 30)
+```
+
+## 11. Violinplots of CD273 expression between HSC1vsHSC2
+```{r}
+Idents(dat_mid_old) <-dat_mid_old$Manual_Label
+
+#VLNplot for HSC1vsHSC2_CD273-ABSeq CD273Vlnplot <-
+ 
+CD273Vlnplot <- VlnPlot(dat_mid_old, features = "CD273-AB",  sort = "increasing", pt.size = 0, idents = c("HSC-1", "HSC-2"), y.max = 2.5) +   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + NoLegend() + 
+  scale_fill_manual(values = c("#F8766D", "#D39200"))  
+
+ggsave(CD273Vlnplot, file="VLNplotCD273_HSC1vsHSC2.png")
+```
+
+## 12. Cluster scores
+```{r}
+#Gene list: Supplement table 12
+
+#HSC score
+DefaultAssay(dat) <- "RNA"
+Idents(dat) <- dat$Manual_Label
+HSC_gene_list <- read.csv("HSC score.csv", header = TRUE)
+Cluster_score_HSC<- AddModuleScore(
+  object = dat, 
+  features = HSC_gene_list,
+  name = "HSC_score",
+  ctrl=10)
+
+VLN_HSC <- VlnPlot(Cluster_score_HSC, features=("HSC_score1"), pt.size=0, sort= "increasing", cols= c("#F8766D", "#D39200", "#00C19F", "#00BA38", "#FF61C3","#DB72FB","#93AA00", "#619CFF","#00B9E3" ))+  NoLegend() + ggtitle("HSC score")
+
+#ggsave("HSC_score.pdf", VLN_HSC)  
+```
+
+#MEP Score
+```{r}
+MEP_gene_list <- read.csv("MEP score.csv", header = TRUE)
+Cluster_scores_MEP<- AddModuleScore(
+  object = dat, 
+  features = MEP_gene_list,
+  name = "MEP_score",
+  ctrl=10)
+
+VLN_MEP<- VlnPlot(Cluster_scores_MEP, features=("MEP_score1"), pt.size=0, sort= "increasing", cols= c("#DB72FB","#00C19F","#F8766D", "#D39200","#619CFF", "#00BA38","#00B9E3","#93AA00","#FF61C3"))+  NoLegend() + ggtitle("MEP score")
+
+#ggsave("MEP_score.pdf", VLN_MEP)  
+```
+
+#MLP score
+```{r}
+DefaultAssay(dat) <- "RNA"
+Idents(dat) <- dat$Manual_Label
+MLP_gene_list <- read.csv("MLP score.csv", header = TRUE)
+Cluster_scores_MLP<- AddModuleScore(
+  object = dat, 
+  features = MLP_gene_list,
+  name = "MLP_score",
+  ctrl=10)
+
+VLN_MLP <- VlnPlot(Cluster_scores_MLP, features=("MLP_score1"), pt.size=0, sort= "increasing", cols= c("#FF61C3","#F8766D", "#D39200","#00BA38","#00C19F","#93AA00","#00B9E3","#619CFF","#DB72FB"))+  NoLegend() + ggtitle("MLP score")
+
+#ggsave("MLP_score.pdf", VLN_MLP)  
+```
+
+#GMP score
+```{r}
+GMP_gene_list <- read.csv("GMP_score.csv", header = TRUE)
+Cluster_scores_GMP<- AddModuleScore(
+  object = dat, 
+  features = GMP_gene_list,
+  name = "GMP_score",
+  ctrl=10)
+
+VLN_GMP <- VlnPlot(Cluster_scores_GMP, features=("GMP_score1"), pt.size=0, sort= "increasing", cols= c("#00B9E3","#619CFF","#93AA00","#00BA38", "#D39200","#FF61C3","#F8766D","#00C19F","#DB72FB"))+  NoLegend() + ggtitle("GMP score")
+
+#ggsave("GMP_score.pdf", VLN_GMP)  
+```
+
+## 13. Save RDS files
+```{r}
+saveRDS(dat,"03_dat_seuratObj.rds")
+saveRDS(dat_mid_old, "04_dat_mid_old_seuratObj.rds")
+```

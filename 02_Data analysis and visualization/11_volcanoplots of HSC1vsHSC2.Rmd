@@ -1,0 +1,100 @@
+---
+title: "Volcano plots - HSC1_HSC2 subset"
+output: html_document
+date: "2024-05-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load libraries
+library(tidyverse)
+library(Seurat)
+library(condiments)
+library(destiny)
+library(dittoSeq)
+library(dplyr)
+library(tidyr)
+library(missMDA)
+library(dismo)
+library(RColorBrewer)
+library(gridExtra)
+library(ggplot2)
+library(cowplot)
+library(ggplot2)
+library(ggrepel)
+library(EnhancedVolcano)
+library(ggpubr)
+library(tidyverse)
+library(ggsignif)
+```
+
+## 1. Load seurat
+```{r}
+#load seurat 
+dat_mid_old <- readRDS ("04_dat_mid_old_seuratObj.rds")
+```
+
+## 2. Subset cluster HSC-1 and HSC-2
+```{r}
+DefaultAssay(dat_mid_old) <- "Abseq_RSEC" 
+Idents(dat_mid_old) <-dat_mid_old$Manual_Label
+
+
+md2 <- dat_mid_old@meta.data %>% as.data.table()  
+md2[, .N, by = c("Manual_Label")]
+
+# Subset the patient sample
+HSC1HSC2_seurat <- subset(dat_mid_old, cells= WhichCells(dat_mid_old, expression = Manual_Label == c("HSC-1","HSC-2")))
+
+
+#Check that the unwanted cell types have been removed:
+md <- HSC1HSC2@meta.data %>% as.data.table()  
+md[, .N, by = c("Manual_Label")]
+
+```
+
+## 3. FindMarkers for HSC1vsHSC2
+```{r}
+
+Abseq_markers <-FindMarkers(HSC1HSC2, assay = "Abseq_RSEC",  ident.1="HSC-1", ident.2="HSC-2", min.pct = 0.25, logfc.threshold = 0)
+
+write.csv(Abseq_markers, file = "Protein_HSC1vsHSC2.csv")
+```
+
+## 4. Volcanoplot HSC1vsHSC2 proteins
+```{r}
+plot1<-EnhancedVolcano(Abseq_markers, 
+                rownames(Abseq_markers),
+                x ="avg_log2FC", 
+                y ="p_val_adj",
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 vs HSC2 - Abseqs",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-3,3)
+)
+
+ggsave("Volcano_HSC1vsHSC2.png",plot1,device = "png",width = 15, height = 10)
+```
+
+## 5. Save seurat object 
+```{r}
+saveRDS(HSC1HSC2,"07_dat_HSC1HSC2.rds")
+```

@@ -1,0 +1,348 @@
+---
+title: "Manual gating"
+output: html_document
+date: "2024-05-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load libraries
+library(tidyverse)
+library(Seurat)
+library(condiments)
+library(slingshot)
+library(destiny)
+library(dittoSeq)
+library(dplyr)
+library(tidyr)
+library(missMDA)
+library(dismo)
+library(RColorBrewer)
+library(gridExtra)
+library(tradeSeq)
+library(ggplot2)
+library(ggrepel)
+library(data.table)
+library(EnhancedVolcano)
+library(scuttle)
+library(viridis)
+```
+
+```{r}
+#load seurat 
+dat_mid_old <- readRDS ("04_dat_mid_old_seuratObj.rds")
+```
+
+## 1. Manual gating 
+### 1. Gating on CD34+
+```{r}
+
+DefaultAssay(dat_mid_old)<-"Abseq_RSEC"
+
+
+#Visualize CD34 and CD38 expression, gate on CD34+:
+
+#All samples together:
+FeatureScatter(dat_mid_old, feature1 = "CD34-AB", feature2 = "CD38-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) #Color by patient
+
+ggsave("240113CD34_DotPlot_cartS1.png", FeatureScatter(dat, feature1 = "CD34-AB", feature2 = "CD38-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+- cells:
+
+CD34plot<-FeatureScatter(dat_mid_old, feature1 = "CD34-AB", feature2 = "CD38-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD34pos<-CellSelector(CD34plot, ident="CD34pos")
+
+FeatureScatter(dat_mid_old, feature1 = "CD34-AB", feature2 = "CD38-AB", cells=CD34pos, group.by = "age_group", shuffle=TRUE)
+
+CD34positive <-subset(dat, cells=CD34pos)
+
+md <- CD34positive@meta.data %>% as.data.table()  
+md[, .N, by = c("Manual_Label")]
+
+
+```
+
+### 2. Gating on CD34+CD273+
+```{r}
+#Visualize CD34 and CD273 expression, gate on CD34+CD273+:
+
+FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD273_DotPlot_cartS1.png", FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD273+ cells:
+
+CD273plot<-FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD273pos<-CellSelector(CD273plot, ident="CD273pos")
+
+FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", cells=CD273pos, group.by = "age_group", shuffle=TRUE)
+
+CD273positive <-subset(CD34positive, cells=CD273pos)
+
+md_1 <- CD273positive@meta.data %>% as.data.table()  
+md_1[, .N, by = c("Manual_Label")]
+
+```
+
+### 3. Gating on CD34+CD273-
+```{r}
+#Visualize CD34 and CD273 expression, gate on CD34+CD273-:
+
+FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD273neg_DotPlot_cartS1.png", FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD273- cells:
+
+CD273negplot<-FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD273neg<-CellSelector(CD273negplot, ident="CD273neg")
+
+FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD273-AB", cells=CD273neg, group.by = "age_group", shuffle=TRUE)
+
+CD273negative <-subset(CD34positive, cells=CD273neg)
+
+md_2 <- CD273negative@meta.data %>% as.data.table()  
+md_2[, .N, by = c("Manual_Label")]
+
+```
+
+### 4. Gating on CD34+CD38-
+```{r}
+#Visualize CD34 and CD38 expression, gate on CD34+CD38-:
+
+#All samples together:
+FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD38-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) #Color by patient
+
+ggsave("240113CD34CD38_DotPlot_cartS1.png", FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD38-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38- cells:
+
+CD38plot<-FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD38-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD38neg<-CellSelector(CD38plot, ident="CD38neg")
+
+FeatureScatter(CD34positive, feature1 = "CD34-AB", feature2 = "CD38-AB", cells=CD38neg, group.by = "age_group", shuffle=TRUE)
+
+cd38negative <-subset(CD34positive, cells=CD38neg)
+
+md_3 <- cd38negative@meta.data %>% as.data.table()  
+md_3[, .N, by = c("Manual_Label")]
+
+```
+
+### 5. Gating on CD34+CD38-CD273+
+```{r}
+#Visualize CD34+CD38-CD273+
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD273pos_DotPlot_cartS1.png", FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD273+ cells:
+
+CD34posCD38negCD273plot<-FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD34CD273pos<-CellSelector(CD34posCD38negCD273plot, ident="CD34CD273pos")
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", cells=CD34CD273pos, group.by = "age_group", shuffle=TRUE)
+
+CD34CD273positive <-subset(cd38negative, cells=CD34CD273pos)
+
+md_4 <- CD34CD273positive@meta.data %>% as.data.table()  
+md_4[, .N, by = c("Manual_Label")]
+
+```
+
+### 6. Gating on CD34+CD38-CD273-
+```{r}
+#Visualize CD34+CD38-CD273-
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD273neg_DotPlot_cartS1.png", FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD273+ cells:
+
+CD34posCD38negCD273negplot<-FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD34CD273neg<-CellSelector(CD34posCD38negCD273negplot, ident="CD34CD273neg")
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD273-AB", cells=CD34CD273neg, group.by = "age_group", shuffle=TRUE)
+
+CD34CD273negative <-subset(cd38negative, cells=CD34CD273neg)
+
+md_5 <- CD34CD273negative@meta.data %>% as.data.table()  
+md_5[, .N, by = c("Manual_Label")]
+
+```
+
+### 7. Gating on CD34+CD38-CD45RA-
+```{r}
+#Visualize CD34+CD38-CD45RA-
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD45RAneg_DotPlot_cartS1.png", FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD45RA- cells:
+
+CD45RAnegplot<-FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD45neg<-CellSelector(CD45RAnegplot, ident="CD45neg")
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", cells=CD45neg, group.by = "age_group", shuffle=TRUE)
+
+CD45negative <-subset(cd38negative, cells=CD45neg)
+
+md_6 <- CD45negative@meta.data %>% as.data.table()  
+md_6[, .N, by = c("Manual_Label")]
+
+```
+
+### 8. Gating on CD34+CD38-CD45RA-CD273+
+```{r}
+#Visualize CD34+CD38-CD45RA-CD273+
+
+FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD45RAnegCD273pos_DotPlot_cartS1.png", FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD45RA-CD273+ cells:
+
+CD45RAnegCD273posplot<-FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD45negCD273pos<-CellSelector(CD45RAnegCD273posplot, ident="CD45negCD273pos")
+
+FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", cells=CD45negCD273pos, group.by = "age_group", shuffle=TRUE)
+
+CD45negativeCD273pos <-subset(CD45negative, cells=CD45negCD273pos)
+
+md_7 <- CD45negativeCD273pos@meta.data %>% as.data.table()  
+md_7[, .N, by = c("Manual_Label")]
+
+```
+
+### 9. Gating on CD34+CD38-CD45RA-CD273-
+```{r}
+#Visualize CD34+CD38-CD45RA-CD273-
+
+FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD45RAnegCD273neg_DotPlot_cartS1.png", FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD45RA-CD273- cells:
+
+CD45RAnegCD273negplot<-FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD45negCD273neg<-CellSelector(CD45RAnegCD273negplot, ident="CD45negCD273neg")
+
+FeatureScatter(CD45negative, feature1 = "CD273-AB", feature2 = "CD90-AB", cells=CD45negCD273neg, group.by = "age_group", shuffle=TRUE)
+
+CD45negativeCD273negative <-subset(CD45negative, cells=CD45negCD273neg)
+
+md_8 <- CD45negativeCD273negative@meta.data %>% as.data.table()  
+md_8[, .N, by = c("Manual_Label")]
+
+```
+
+### 10. Gating on CD34+CD38-CD45RA-CD90+
+```{r}
+#Visualize CD34+CD38-CD45RA-CD90+
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD45RAnegCD90pos_DotPlot_cartS1.png", FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD45RA- cells:
+
+CD45RAnegCD90posplot<-FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD90pos<-CellSelector(CD45RAnegCD90posplot, ident="CD90neg")
+
+FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", cells=CD90neg, group.by = "age_group", shuffle=TRUE)
+
+CD90positive <-subset(cd38negative, cells=CD90neg)
+
+md_9 <- CD90positive@meta.data %>% as.data.table()  
+md_9[, .N, by = c("Manual_Label")]
+
+```
+
+### 11. Gating on CD34+CD38-CD45RA-CD90+CD273+
+```{r}
+#Visualize CD34+CD38-CD45RA-CD90+CD273+
+
+FeatureScatter(CD90positive, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD45RAnegCD90posCD273pos_DotPlot_cartS1.png", FeatureScatter(cd38negative, feature1 = "CD45RA-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD45RA-CD90+CD273+ cells:
+
+CD45RAnegCD90posCD273posplot<-FeatureScatter(CD90positive, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD90posCD273pos<-CellSelector(CD45RAnegCD90posCD273posplot, ident="CD90posCD273pos")
+
+FeatureScatter(CD90positive, feature1 = "CD273-AB", feature2 = "CD90-AB", cells=CD90posCD273pos, group.by = "age_group", shuffle=TRUE)
+
+CD90positiveCD273positive <-subset(CD90positive, cells=CD90posCD273pos)
+
+md_10 <- CD90positiveCD273positive@meta.data %>% as.data.table()  
+md_10[, .N, by = c("Manual_Label")]
+```
+
+### 12. Gating on CD34+CD38-CD45RA-CD90+CD273-
+```{r}
+#Visualize CD34+CD38-CD45RA-CD90+CD273-
+
+FeatureScatter(CD90positive, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE) 
+#Color by patient
+
+ggsave("240113CD34CD38lowCD45RAnegCD90posCD273neg_DotPlot_cartS1.png", FeatureScatter(CD90positive, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE), device="png", width=7, height=5)
+
+
+#Gate on the CD34+CD38-CD45RA-CD90+CD273- cells:
+
+CD45RAnegCD90posCD273negplot<-FeatureScatter(CD90positive, feature1 = "CD273-AB", feature2 = "CD90-AB", group.by = "age_group", pt.size=0.2, shuffle=TRUE)
+
+CD90posCD273neg<-CellSelector(CD45RAnegCD90posCD273negplot, ident="CD90posCD273neg")
+
+FeatureScatter(CD90positive, feature1 = "CD273-AB", feature2 = "CD90-AB", cells=CD90posCD273neg, group.by = "age_group", shuffle=TRUE)
+
+CD90positiveCD273negative <-subset(CD90positive, cells=CD90posCD273neg)
+
+md_11 <- CD90positiveCD273negative@meta.data %>% as.data.table()  
+md_11[, .N, by = c("Manual_Label")]
+```
+
+## 2. Save RDS files
+```{r}
+saveRDS(CD45negativeCD273pos, "05_dat_CD45negCD273pos_seuratObj.rds")
+saveRDS(CD45negativeCD273negative, "06_dat_CD45negCD273neg_seuratObj.rds")
+```
+

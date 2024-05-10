@@ -1,0 +1,264 @@
+---
+title: "Visualization of CD34+cells from human BM"
+output: html_document
+date: "2024-05-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Load librarys
+```{r}
+library(data.table)
+library(datasets)
+library(matrixStats)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(patchwork)
+library(Seurat)
+library(tradeSeq)
+library(stringr)
+library(dittoSeq)
+library(readr)
+library(rio)
+library(DESeq2)
+library(muscat)
+library(scater)
+library(RColorBrewer)
+library(stringr)
+library(magrittr)
+```
+
+#load seurat object
+```{r}
+CCA_mrna_combined_cartridges_annotated <- readRDS("CCA_mrna_combined_cartridges_annotated.rds")
+```
+
+
+## 1. Annotate clusters
+```{r}
+Idents(CCA_mrna_combined_cartridges_annotated) <-CCA_mrna_combined_cartridges_annotated$seurat_clusters
+
+#names(CCA_mrna_combined_cartridges_annotated@meta.data)
+
+CCA_mrna_combined_cartridges_annotated$Manual_Label <- ""
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "0", "Manual_Label"] <- "MPP/LMPP"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "1", "Manual_Label"] <- "HSC/MPP"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "2", "Manual_Label"] <- "EryP-3"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "3", "Manual_Label"] <- "EryP-1"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "4", "Manual_Label"] <- "Age-related-P"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "5", "Manual_Label"] <- "MDP-1"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "6", "Manual_Label"] <- "MEP"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "7", "Manual_Label"] <- "GMP-1"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "8", "Manual_Label"] <- "EryP-2"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "9", "Manual_Label"] <- "MPP/MK-Ery"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "10", "Manual_Label"] <- "MDP-2"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "11", "Manual_Label"] <- "EryP-5"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "12", "Manual_Label"] <- "MDP-2/Pre-DC"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "13", "Manual_Label"] <- "EryP-4"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "14", "Manual_Label"] <- "MKP"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "15", "Manual_Label"] <- "Pre-/Pro-B"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "16", "Manual_Label"] <- "Eo/Baso/Mast-P"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "17", "Manual_Label"] <- "LyP"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "18", "Manual_Label"] <- "GMP-Neut"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "19", "Manual_Label"] <- "EryP-6"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "20", "Manual_Label"] <- "PC"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "21", "Manual_Label"] <- "Pre-PC"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "22", "Manual_Label"] <- "Myelo-P"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$seurat_clusters == "23", "Manual_Label"] <- "Mono"
+```
+
+
+## 2. UMAP representation with label box
+```{r}
+
+Idents(CCA_mrna_combined_cartridges_annotated) <-CCA_mrna_combined_cartridges_annotated$Manual_Label
+
+my_levels <-c("HSC/MPP", "MPP/MK-Ery", "MPP/LMPP", "Age-related-P","MEP", "MKP", "EryP-1", "EryP-2", "EryP-3", "EryP-4", "EryP-5","EryP-6", "Eo/Baso/Mast-P","MDP-1", "MDP-2",   "MDP-2/Pre-DC", "Myelo-P", "Mono", "GMP-1","GMP-Neut", "LyP", "Pre-/Pro-B","Pre-PC","PC")
+
+Idents(CCA_mrna_combined_cartridges_annotated) <- factor(Idents(CCA_mrna_combined_cartridges_annotated), levels= my_levels)
+
+UMAP_Allcells <- DimPlot(CCA_mrna_combined_cartridges_annotated, label = T, label.box = T, repel = T, cols= c("#F8766D", "#ED813E","#DE8C00","#CD9600","#B79F00","#9DA700", "#7CAE00", "#49B500","#00BA38","#00BE67", "#00C08B", "#00C1A9", "#00BFC4", "#00BBDC","#00B4F0",
+"#00A9FF","#619CFF","#9F8CFF", "#C77CFF", "#E36EF6","#F564E3", "#FF61CC", "#FF64B0",
+"#FF6C91")) + NoLegend() + NoAxes()
+ggsave("240119UMAP.tiff", DimPlot(CCA_mrna_combined_cartridges_annotated, label = T, label.box = T, repel = T) + NoLegend() + NoAxes())
+
+
+#ggsave("UMAP_allcells.pdf", UMAP_Allcells)
+```
+
+
+## 3. Dotplot representation of selected genes 
+```{r}
+
+DefaultAssay(CCA_mrna_combined_cartridges_annotated) <- "RNA"
+
+Idents(CCA_mrna_combined_cartridges_annotated) <- CCA_mrna_combined_cartridges_annotated$Manual_Label
+my_levels <-c("HSC/MPP", "MPP/MK-Ery", "MPP/LMPP", "Age-related-P","MEP", "MKP", "EryP-1", "EryP-2", "EryP-3", "EryP-4", "EryP-5","EryP-6", "Eo/Baso/Mast-P","MDP-1", "MDP-2",   "MDP-2/Pre-DC", "Myelo-P", "Mono", "GMP-1","GMP-Neut", "LyP", "Pre-/Pro-B","Pre-PC","PC")
+
+Idents(CCA_mrna_combined_cartridges_annotated) <- factor(Idents(CCA_mrna_combined_cartridges_annotated), levels= my_levels)
+
+RNAplot <- DotPlot(CCA_mrna_combined_cartridges_annotated, features = c("ISG20","MME", "HMGB1","FAM30A", "FLT3", "SPINK2", "SMIM24", "GINS2", "HDC", "CD74", "ACTB", "GPX1", "CYBB", "CD48", "CD93", "MYD88", "KLF4", "CTSH", "NCF2", "CD14", "FGR", "SKG1",  "PRG2", "RNASE2", "CLC", "FCER1A", "CPA3", "HAVCR2","CD4", "CEBPA", "CLEC12A", "CEBPE","CSF3R", "HBB" ,"HBA2", "HBA1", "AHSP","ALAS2", "TFRC", "GATA1", "CNRIP1", "CTNNBL1", "GATA2", "TPM1", "MPL", "VWF", "MEIS1", "PROM1",  "CD34", "CRHBP", "HOPX", "MLLT3", "HLF")) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) +
+  coord_flip()
+  
+  #ggsave("RNAplot_Dotplot.pdf", RNAplot,  width = 10, height = 13.5)
+```
+
+## 3. Exclude young samples for protein analysis
+```{r}
+
+library(data.table)
+
+# change identity
+Idents(CCA_mrna_combined_cartridges_annotated)<-CCA_mrna_combined_cartridges_annotated$sample
+
+# subset samples
+CCA_mrna_combined_cartridges_annotated_mid_old <- subset(CCA_mrna_combined_cartridges_annotated, cells=WhichCells(CCA_mrna_combined_cartridges_annotated, expression = age_group == "young"), invert=TRUE)
+
+md <- CCA_mrna_combined_cartridges_annotated_mid_old@meta.data %>% as.data.table()  
+md[, .N, by = c("age_group")]
+
+md <- CCA_mrna_combined_cartridges_annotated_mid_old@meta.data %>% as.data.table()  
+md[, .N, by = c("Manual_Label")]
+
+```
+
+## 4. Dotplot - abseqs 
+```{r}
+DefaultAssay(CCA_mrna_combined_cartridges_annotated_mid_old) <-"Abseq_RSEC"
+
+
+Idents(CCA_mrna_combined_cartridges_annotated_mid_old) <- CCA_mrna_combined_cartridges_annotated_mid_old$Manual_Label
+
+my_levels <-c("HSC/MPP", "MPP/MK-Ery", "MPP/LMPP", "Age-related-P","MEP", "MKP", "EryP-1", "EryP-2", "EryP-3", "EryP-4", "EryP-5","EryP-6", "Eo/Baso/Mast-P","MDP-1", "MDP-2",   "MDP-2/Pre-DC", "Myelo-P", "Mono", "GMP-1","GMP-Neut", "LyP", "Pre-/Pro-B","Pre-PC","PC")
+
+Idents(CCA_mrna_combined_cartridges_annotated_mid_old) <- factor(Idents(CCA_mrna_combined_cartridges_annotated_mid_old), levels= my_levels)
+
+abseqsplot <- DotPlot(CCA_mrna_combined_cartridges_annotated_mid_old, features = c("CD274-AB", "CD124-AB","CD11b-AB", "CD19-AB", "CD10-AB", "CD25-AB", "CD22-AB", "CD45RA-AB", "CD62L-AB", "CD7-AB", "CD96-AB", "CD184-AB", "CD9-AB",  "CD45RO-AB", "CD26-AB", "CD1a-AB", "CD15-AB", "CD14-AB", "CD13-AB", "B7-AB", "CD126-AB", "CD33-AB", "CD371-AB", "CD56-AB", "Tim3-AB", "CD93-AB", "CD11c-AB", "CD1c-AB", "CD47-AB", "CD123-AB", "CD32-AB", "CD38-AB", "HLA-AB.1", "HLA-AB", "CD235a-b-AB", "CD155-AB", "CD81-AB", "CD117-AB", "CD137-AB", "CD3-AB", "CD45-AB", "CD133-AB", "GPR56-AB", "CD90-AB", "CD34-AB", "CD273-AB")) +
+theme(axis.text.x = element_text(angle = 45, hjust=1)) + scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral")))  +
+coord_flip()
+
+#ggsave("ABseqplot_Dotplot.pdf", abseqsplot,  width = 10, height = 15)
+```
+
+## 5. Violin plots - for selected abseqs
+```{r}
+DefaultAssay(CCA_mrna_combined_cartridges_annotated_mid_old) <-"Abseq_RSEC"
+
+
+Idents(CCA_mrna_combined_cartridges_annotated_mid_old) <- CCA_mrna_combined_cartridges_annotated_mid_old$Manual_Label
+
+my_levels <-c("HSC/MPP", "MPP/MK-Ery", "MPP/LMPP", "Age-related-P","MEP", "MKP", "EryP-1", "EryP-2", "EryP-3", "EryP-4", "EryP-5","EryP-6", "Eo/Baso/Mast-P","MDP-1", "MDP-2",   "MDP-2/Pre-DC", "Myelo-P", "Mono", "GMP-1","GMP-Neut", "LyP", "Pre-/Pro-B","Pre-PC","PC")
+
+Idents(CCA_mrna_combined_cartridges_annotated_mid_old) <- factor(Idents(CCA_mrna_combined_cartridges_annotated_mid_old), levels= my_levels)
+
+#Abseqsviolinplot <- c("CD45RA-AB","CD90-AB", "CD38-AB") - rerun for CD90 and CD45RA
+
+ggsave("Violinplot_CD38.pdf", VlnPlot(CCA_mrna_combined_cartridges_annotated_mid_old, features = "CD38-AB", pt.size=0) + 
+         NoLegend() + 
+         scale_fill_manual(values = c("#F8766D", "#ED813E","#DE8C00","#CD9600","#B79F00","#9DA700", "#7CAE00", "#49B500","#00BA38","#00BE67", "#00C08B", "#00C1A9", "#00BFC4", "#00BBDC","#00B4F0",
+"#00A9FF","#619CFF","#9F8CFF", "#C77CFF", "#E36EF6","#F564E3", "#FF61CC", "#FF64B0",
+"#FF6C91")),
+       device = "pdf",width = 8, height = 4)
+```
+
+## 6. Overlap figure for CD34CD38 sorted cells 
+```{r}
+
+CD34CD38 <-c("004CD34CD38",  "012CD34CD38", "018CD34CD38", "019CD34CD38", "SampleTag02_hs", "SampleTag04_hs", "SampleTag06_hs", "SampleTag08_hs", "SampleTag10_hs", "SampleTag12_hs")
+
+CCA_mrna_combined_cartridges_annotated$CD34CD38 <- ""
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "004CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "012CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "018CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "019CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag02_hs", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag04_hs", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag06_hs", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag08_hs", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag10_hs", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag12_hs", "CD34CD38"] <- "CD34CD38"
+
+Idents(CCA_mrna_combined_cartridges_annotated) <- CCA_mrna_combined_cartridges_annotated$CD34CD38
+ggsave("Figure1_UMAPcd38-greyred.pdf", DimPlot(CCA_mrna_combined_cartridges_annotated, pt.size = NULL, sizes.highlight = 0.1, cells.highlight = Cells(subset(CCA_mrna_combined_cartridges_annotated, idents = c("CD34CD38")))) + NoAxes () + NoLegend() +
+scale_color_manual(values=c("gray", "red")))
+
+```
+
+## 7. Cell numbers
+```{r}
+# change identity
+Idents(CCA_mrna_combined_cartridges_annotated)<-CCA_mrna_combined_cartridges_annotated$CD34CD38
+
+# subset samples
+CCA_mrna_combined_cartridges_annotated_CD34CD38 <- subset(CCA_mrna_combined_cartridges_annotated, cells=WhichCells(CCA_mrna_combined_cartridges_annotated, expression = age_group == "young"), invert=TRUE)
+
+md <- CCA_mrna_combined_cartridges_annotated_mid_old@meta.data %>% as.data.table()  
+md[, .N, by = c("age_group")]
+
+md <- CCA_mrna_combined_cartridges_annotated_mid_old@meta.data %>% as.data.table()  
+md[, .N, by = c("Manual_Label")]
+```
+
+```{r}
+cellspercluster<-md_2[, .N, by = c("CD34CD38", "Manual_Label")] %>% dcast(., CD34CD38 ~ Manual_Label, value.var = "N")     
+```
+
+## 8. UMAP representation for selected genes
+```{r}
+DefaultAssay(CCA_mrna_combined_cartridges_annotated) <- "RNA"
+
+selected_genes <- c("CRHBP", "HOPX", "HLF")
+
+UMAP_selected_genes <- FeaturePlot(CCA_mrna_combined_cartridges_annotated, features = selected_genes, reduction = "umap", ncol = 3) & 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) & NoAxes()
+
+ggsave("Figure1C_UMAPselectedgenes.pdf", UMAP_selected_genes, width=8, height=2.7)
+```
+
+## 9. UMAP - split by age
+```{r}
+#one age group at a time
+
+
+Idents(CCA_mrna_combined_cartridges_annotated) <- CCA_mrna_combined_cartridges_annotated$age_group
+
+
+#young
+UMAP_HIGHLIGHT_YOUNG <- DimPlot(CCA_mrna_combined_cartridges_annotated, 
+        cells.highlight = Cells(subset(CCA_mrna_combined_cartridges_annotated, idents = "young")), 
+        cols.highlight = "red", sizes.highlight = 0.1, cols= "white") + NoLegend() +
+  NoAxes()
+ggsave("SupplFigure_UMAPyoung.pdf", UMAP_HIGHLIGHT_YOUNG)
+
+#mid
+UMAP_HIGHLIGHT_MID <- DimPlot(CCA_mrna_combined_cartridges_annotated, 
+        cells.highlight = Cells(subset(CCA_mrna_combined_cartridges_annotated, idents = "midage")), 
+        cols.highlight = "blue", sizes.highlight = 0.1, cols= "white") + NoLegend() +
+  NoAxes()
+ggsave("SupplFigure_UMAPmid.pdf", UMAP_HIGHLIGHT_MID)
+
+
+#old
+UMAP_HIGHLIGHT_OLD <-DimPlot(CCA_mrna_combined_cartridges_annotated, 
+        cells.highlight = Cells(subset(CCA_mrna_combined_cartridges_annotated, idents = "old")), 
+        cols.highlight = "green", sizes.highlight = 0.1, cols= "white") + NoLegend() +
+  NoAxes()
+#ggsave("SupplFigure_UMAPold.pdf", UMAP_HIGHLIGHT_OLD)
+```
+
+## 10. UMAP - all age groups
+```{r}
+
+#UMAP all age groups at once
+
+UMAP_allagegroups <- DimPlot(CCA_mrna_combined_cartridges_annotated, group.by = "age_group", label = F, label.box = F, pt.size = 0.1, repel = F) + NoAxes () +
+scale_color_manual(values=c( "red","blue","green"))
+
+#ggsave("SupplFigure_UMAPallagegroups.pdf", UMAP_allagegroups)
+```
+

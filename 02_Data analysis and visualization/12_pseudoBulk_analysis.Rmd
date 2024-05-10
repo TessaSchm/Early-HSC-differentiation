@@ -1,0 +1,390 @@
+---
+title: "PseudoBulk_analysis"
+output: html_document
+date: "2023-11-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+```{r, echo=FALSE}
+
+library(Seurat)
+library(scran)
+library(scrater)
+library(DESeq2)
+library(EnhancedVolcano)
+library(glmGamPoi)
+```
+
+#1. Load data and generate pseudobulk
+```{r}
+dat=readRDS("./03-dat-seuratObj.rds")
+
+
+DefaultAssay(dat) = "RNA"
+datsce <- as.SingleCellExperiment(dat)
+
+counts(datsce)=dat@assays$RNA@counts
+
+# making one pseudo bulk per cluster and per biological sample
+reduced_sce <- pseudobulk(datsce, group_by = vars(sample, condition = Manual_Label))
+
+#adding age group information to the pseudobulk:
+  
+annot <- unique(colData(datsce)[,c("sample","age_group")])
+
+reduced_sce$age_group <- ""
+for(i in 1:nrow(reduced_sce))
+{
+  reduced_sce$age_group[i] <- diff$age_group[which(annot$sample%in%reduced_sce$sample[i])]
+}
+
+```
+
+
+#2. Perform diff. gene expression on HSC-1 vs. HSC-2 cluster
+```{r}
+dds <- DESeqDataSet(reduced_sce,design= ~ sample+condition)
+diff <- DESeq(dds)
+
+res <- results(diff,contrast=c("condition","HSC-1","HSC-2"))
+
+DifExpr <- as.matrix(res[order(res$padj),])
+
+DifExpr <- DifExpr[which(DifExpr[,"padj"]<0.05),]
+
+write.csv(DifExpr,"pseudobulk_HSC1vsHSC2_DESeq2.csv")
+
+
+markers <- rownames(DifExpr[which(abs(DifExpr[,"log2FoldChange"])>=0.5&DifExpr[,"padj"]<=0.0001),])
+
+#make volcano plot
+plotold <- EnhancedVolcano(res, 
+                rownames(res),
+                x ="log2FoldChange", 
+                y ="padj",
+                selectLab=markers,
+                max.overlaps = Inf,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 vs HSC2 - comp",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-3,5)
+)
+
+ggsave("Volcano_HSC1_VS-HSC2_DESeq.pdf",plotold,device = "pdf",width = 15, height = 10)
+
+```
+
+
+#3. Effect of age within the HSC-1 cluster
+```{r}
+# select the pseudobulks for cluster HSC-1
+reduced_sceHSC1 <- reduced_sce[,which(reduced_sce$condition%in% "HSC-1")]
+
+dds <- DESeqDataSet(reduced_sceHSC1,design= ~ age_group)
+diff <- DESeq(dds)
+names(results(diff))
+
+```
+## young vs. old
+```{r}
+res <- results(diff,contrast=c("age_group","young","old"))
+
+DifExpr <- as.matrix(res[order(res$padj),])
+
+DifExpr <- DifExpr[which(DifExpr[,"padj"]<0.05),]
+
+write.csv(DifExpr,"pseudobulk_HSC1_YoungvsOld_DESeq2.csv")
+
+markers <- rownames(DifExpr[which(abs(DifExpr[,"log2FoldChange"])>=0.5&DifExpr[,"padj"]<=0.0001),])
+
+plotold <- EnhancedVolcano(res, 
+                rownames(res),
+                x ="log2FoldChange", 
+                y ="padj",
+                selectLab=markers,
+                max.overlaps = Inf,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 Young vs Old - comp",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-3.6,5)
+)
+
+
+ggsave("Volcano_HSC1_youngVSold_DESeq.pdf",plotold,device = "pdf",width = 15, height = 10)
+
+
+```
+
+## young vs. mid age
+```{r}
+res <- results(diff,contrast=c("age_group","young","midage"))
+
+DifExpr <- as.matrix(res[order(res$padj),])
+
+DifExpr <- DifExpr[which(DifExpr[,"padj"]<0.05),]
+
+write.csv(DifExpr,"pseudobulk_HSC1_YoungvsMid_DESeq2.csv")
+
+markers <- rownames(DifExpr[which(abs(DifExpr[,"log2FoldChange"])>=0.5&DifExpr[,"padj"]<=0.0001),])
+
+plotold <- EnhancedVolcano(res, 
+                rownames(res),
+                x ="log2FoldChange", 
+                y ="padj",
+                selectLab=markers,
+                max.overlaps = Inf,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 Young vs Mid - comp",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-4,5)
+)
+
+
+ggsave("Volcano_HSC1_youngVSmid_DESeq.pdf",plotold,device = "pdf",width = 15, height = 10)
+```
+##  mid age vs old
+```{r}
+res <- results(diff,contrast=c("age_group","midage","old"))
+
+DifExpr <- as.matrix(res[order(res$padj),])
+
+DifExpr <- DifExpr[which(DifExpr[,"padj"]<0.05),]
+
+write.csv(DifExpr,"pseudobulk_HSC1_MidvsOld_DESeq2.csv")
+
+markers <- rownames(DifExpr[which(abs(DifExpr[,"log2FoldChange"])>=0.5&DifExpr[,"padj"]<=0.0001),])
+
+
+plotold <- EnhancedVolcano(res, 
+                rownames(res),
+                x ="log2FoldChange", 
+                y ="padj",
+                selectLab=markers,
+                max.overlaps = Inf,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 Mid vs Old - comp",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-3.7,5)
+)
+
+ggsave("Volcano_HSC1_midVSold_DESeq.pdf",plotold,device = "pdf",width = 15, height = 10)
+
+```
+
+#4. HSC-1 vs HSC-2 per age group
+## young HSC-1 vs. HSC-2
+```{r}
+
+reduced_sceYoung <- reduced_sce[,which(reduced_sce$age_group%in% "young")]
+
+dds <- DESeqDataSet(reduced_sceYoung,design= ~ sample+condition)
+diff <- DESeq(dds)
+
+res <- results(diff,contrast=c("condition","HSC-1","HSC-2"))
+
+DifExpr <- as.matrix(res[order(res$padj),])
+
+DifExpr <- DifExpr[which(DifExpr[,"padj"]<0.05),]
+
+write.csv(DifExpr,"pseudobulk_HSC1vsHSC2_young_DESeq2.csv")
+
+markers <- rownames(DifExpr[which(abs(DifExpr[,"log2FoldChange"])>=0.5&DifExpr[,"padj"]<=0.0001),])
+
+
+plotold <- EnhancedVolcano(res, 
+                rownames(res),
+                x ="log2FoldChange", 
+                y ="padj",
+                selectLab=markers,
+                max.overlaps = Inf,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 vs HSC2 - comp",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-3,5)
+)
+
+
+ggsave("Volcano_young_HSC1vsHSC2_DESeq.pdf",plotold,device = "pdf",width = 15, height = 10)
+
+
+```
+## mid HSC-1 vs. HSC-2
+```{r}
+
+reduced_scemidage <- reduced_sce[,which(reduced_sce$age_group%in% "midage")]
+
+
+dds <- DESeqDataSet(reduced_scemidage,design= ~ sample+condition)
+diff <- DESeq(dds)
+names(results(diff))
+res <- results(diff,contrast=c("condition","HSC-1","HSC-2"))
+
+DifExpr <- as.matrix(res[order(res$padj),])
+
+DifExpr <- DifExpr[which(DifExpr[,"padj"]<0.05),]
+
+write.csv(DifExpr,"pseudobulk_HSC1vsHSC2_midage_DESeq2.csv")
+
+
+markers <- rownames(DifExpr[which(abs(DifExpr[,"log2FoldChange"])>=0.5&DifExpr[,"padj"]<=0.0001),])
+library(EnhancedVolcano)
+
+plotold <- EnhancedVolcano(res, 
+                rownames(res),
+                x ="log2FoldChange", 
+                y ="padj",
+                selectLab=markers,
+                max.overlaps = Inf,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 vs HSC2 - comp",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-3,5)
+)
+
+
+ggsave("Volcano_midage_HSC1vsHSC2_DESeq.pdf",plotold,device = "pdf",width = 15, height = 10)
+
+```
+## old HSC-1 vs. HSC-2
+```{r}
+reduced_sceold <- reduced_sce[,which(reduced_sce$age_group%in% "old")]
+
+dds <- DESeqDataSet(reduced_sceold,design= ~ sample+condition)
+diff <- DESeq(dds)
+
+res <- results(diff,contrast=c("condition","HSC-1","HSC-2"))
+
+DifExpr <- as.matrix(res[order(res$padj),])
+
+DifExpr <- DifExpr[which(DifExpr[,"padj"]<=0.05),]
+
+
+markers <- rownames(DifExpr[which(abs(DifExpr[,"log2FoldChange"])>=0.5&DifExpr[,"padj"]<=0.0001),])
+library(EnhancedVolcano)
+
+plotold <- EnhancedVolcano(res, 
+                rownames(res),
+                x ="log2FoldChange", 
+                y ="padj",
+                selectLab=markers,
+                max.overlaps = Inf,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 0.5,
+                pointSize = 5.0,
+                labSize = 4.0,
+                labCol = 'black',
+                boxedLabels = TRUE,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 0.75,
+                colConnectors = 'black',
+                title="HSC1 vs HSC2 - comp",
+                subtitle="FDR<=0.05, Absolute FC>=0.5",
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim=c(-3,5)
+)
+
+write.csv(DifExpr,"pseudobulk_HSC1vsHSC2_old_DESeq2.csv")
+ggsave("Volcano_old_HSC1vsHSC2_DESeq.pdf",plotold,device = "pdf",width = 15, height = 10)
+```
+
