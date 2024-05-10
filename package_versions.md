@@ -78,6 +78,7 @@ TrajectoryUtils       1.10.1
 tidyverse             2.0.0
 SeuratObject          5.0.1
 Seurat                5.0.3
+Slingshot             2.4.0
 viridis               0.6.5
 viridisLite           0.4.2
 ```
