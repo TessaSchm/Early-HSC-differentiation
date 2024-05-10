@@ -55,42 +55,40 @@ annotate_modalities <- function(object, annotation_object){
 #3. Run annotation analysis
 ```{r}
 # run annotations analysis
-run9_annotated <- annotate_modalities(run9_seurat_object, WTA_project)
-run8_annotated <- annotate_modalities(run8_seurat_object, WTA_project)
-C1001_annotated <- annotate_modalities(C1001_seurat_object, WTA_project)
-C1002_annotated <- annotate_modalities(C1002_seurat_object, WTA_project)
-C1003_annotated <- annotate_modalities(C1003_seurat_object, WTA_project)
-y2_annotated <- annotate_modalities(y2_seurat_object, WTA_project)
-y3_annotated <- annotate_modalities(y3_seurat_object, WTA_project)
-y4_annotated <- annotate_modalities(y4_seurat_object, WTA_project)
-y5_annotated <- annotate_modalities(y5_seurat_object, WTA_project)
-y6_annotated <- annotate_modalities(y6_seurat_object, WTA_project)
+Exp_1_annotated <- annotate_modalities(Exp_1_seurat_object, WTA_project)
+Exp_2_annotated <- annotate_modalities(Exp_2_seurat_object, WTA_project)
+Exp_3_annotated <- annotate_modalities(Exp_3_seurat_object, WTA_project)
+Exp_4_annotated <- annotate_modalities(Exp_4_seurat_object, WTA_project)
+Exp_5_annotated <- annotate_modalities(Exp_5_seurat_object, WTA_project)
+Exp_6_annotated <- annotate_modalities(Exp_6_seurat_object, WTA_project)
+Exp_7_annotated <- annotate_modalities(Exp_7_seurat_object, WTA_project)
+Exp_8_annotated <- annotate_modalities(Exp_8_seurat_object, WTA_project)
+Exp_9_annotated <- annotate_modalities(Exp_9_seurat_object, WTA_project)
+Exp_10_annotated <- annotate_modalities(Exp_10_seurat_object, WTA_project)
+
 ```
 
 #4. Save annotated data
 ```{r}
 #save annotated objects
-saveRDS(run8_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, run8_name))
 
-saveRDS(run9_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, run9_name))
+saveRDS(Exp_1_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_1_name))
 
-saveRDS(C1001_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, C1001_name))
+saveRDS(Exp_2_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_2_name))
 
-saveRDS(C1002_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, C1002_name))
+saveRDS(Exp_3_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_3_name))
 
-saveRDS(C1003_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, C1003_name))
+saveRDS(Exp_4_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_4_name))
 
-saveRDS(y2_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
-                                            y2_name))
+saveRDS(Exp_5_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_5_name))
 
-saveRDS(y3_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
-                                            y3_name))
+saveRDS(Exp_6_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_6_name))
 
-saveRDS(y4_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
-                                            y4_name))
-saveRDS(y5_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
-                                            y5_name))
+saveRDS(Exp_7_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_7_name))
 
-saveRDS(y6_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
-                                            y6_name))
+saveRDS(Exp_8_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_8_name))
+
+saveRDS(Exp_9_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_9_name))
+
+saveRDS(Exp_10_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, Experiment_10_name))
 ```
