@@ -7,6 +7,7 @@
 04. Batch effect correction using CCA.
 
 [02_Data analysis and visualization](02_Data_analysis_and_visualization) 
+
 05. Analysis and visualization of CD34+ HSPCs. 
 06. Re-clustering of immature cell subset for in-depth analysis. 
 07. Annotation and visualization of immature clusters.
