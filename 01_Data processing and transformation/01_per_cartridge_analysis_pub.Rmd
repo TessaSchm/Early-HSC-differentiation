@@ -78,91 +78,114 @@ dir_young <- 'young'
 
 ###data files##
 
-#old
-run9 <- 'Combined_Rieger_Run9_Index3_RSEC_MolsPerCell.csv'
-run9_ST <- 'Rieger_Run9_Index3_Sample_Tag_Calls.csv'
-run9_name <- 'run9'
+#young
+Experiment_1 <- 'Experiment_1_RSEC_MolsPerCell.csv'
+Experiment_1_ST <- 'Experiment_1_Sample_Tag_Calls.csv'
+Experiment_1_name <- 'Exp_1'
 
-run8 <- 'Combined_Rieger_Run8_Index2_RSEC_MolsPerCell.csv'
-run8_ST <- 'Rieger_Run8_Index2_Sample_Tag_Calls.csv'
-run8_name <- 'run8'
+
+Experiment_2 <- 'Experiment_2_RSEC_MolsPerCell.csv'
+Experiment_2_ST <- 'Experiment_2_Sample_Tag_Calls.csv'
+Experiment_2_name <- 'Exp_2'
+
+
+Experiment_3 <- 'Experiment_3_RSEC_MolsPerCell.csv'
+Experiment_3_ST <- 'Experiment_3_Sample_Tag_Calls.csv'
+Experiment_3_name <- 'Exp_3'
+
+
+Experiment_4 <- 'Experiment_4_RSEC_MolsPerCell.csv'
+Experiment_4_ST <- 'Experiment_4_Sample_Tag_Calls.csv'
+Experiment_4_name <- 'Exp_4'
+
+
+Experiment_5 <- 'Experiment_5_RSEC_MolsPerCell.csv'
+Experiment_5_ST <- 'Experiment_5_Sample_Tag_Calls.csv'
+Experiment_5_name <- 'Exp_5'
+
+#old age
+
+Experiment_6 <- 'Experiment_6_RSEC_MolsPerCell.csv'
+Experiment_6_ST <- 'Experiment_6_Sample_Tag_Calls.csv'
+Experiment_6_name <- 'Exp_6'
+
+
+Experiment_7 <- 'Experiment_7_RSEC_MolsPerCell.csv'
+Experiment_7_ST <- 'Experiment_7_Sample_Tag_Calls.csv'
+Experiment_7_name <- 'Exp_7'
+
 
 #mid age
-C1001 <- 'Combined_P18159_1001_RSEC_MolsPerCell.csv'
-C1001_ST <- 'P18159_1001_Sample_Tag_Calls.csv'
-C1001_name <- '1001'
 
-C1002 <- 'Combined_P18159_1002_RSEC_MolsPerCell.csv'
-C1002_ST <- 'P18159_1002_Sample_Tag_Calls.csv'
-C1002_name <- '1002'
+Experiment_8 <- 'Experiment_8_RSEC_MolsPerCell.csv'
+Experiment_8_ST <- 'Experiment_8_Sample_Tag_Calls.csv'
+Experiment_8_name <- 'Exp_8'
 
-C1003 <- 'Combined_P18159_1003_RSEC_MolsPerCell.csv'
-C1003_ST <- 'P18159_1003_Sample_Tag_Calls.csv'
-C1003_name <- '1003'
 
-#young
-y2 <- '_1_Combined_HD2_RSEC_MolsPerCell.csv'
-y2_ST <- '_1_HD2_Sample_Tag_Calls.csv'
-y2_name <- 'young2'
+Experiment_9 <- 'Experiment_9_RSEC_MolsPerCell.csv'
+Experiment_9_ST <- 'Experiment_9_Sample_Tag_Calls.csv'
+Experiment_9_name <- 'Exp_9'
 
-y3 <- '_1_Combined_HD3_RSEC_MolsPerCell.csv'
-y3_ST <- '_1_HD3_Sample_Tag_Calls.csv'
-y3_name <- 'young3'
+Experiment_10 <- 'Experiment_10_RSEC_MolsPerCell.csv'
+Experiment_10_ST <- 'Experiment_10_Sample_Tag_Calls.csv'
+Experiment_10_name <- 'Exp_10'
 
-y4 <- '_1_Combined_HD4_RSEC_MolsPerCell.csv'
-y4_ST <- '_1_HD4_Sample_Tag_Calls.csv'
-y4_name <- 'young4'
 
-y5 <- '_4_Combined_HD5_RSEC_MolsPerCell.csv'
-y5_ST <- '_4_HD5_Sample_Tag_Calls.csv'
-y5_name <- 'young5'
-
-y6 <- '_4_Combined_HD6_RSEC_MolsPerCell.csv'
-y6_ST <- '_4_HD6_Sample_Tag_Calls.csv'
-y6_name <- 'young6'
 ```
+
+
+
+
 
 #3. Implement Generate Seurat objects for each cartridge
 ```{r run_anlaysis}
-run8_seurat_object <- generate_seurat_object(main_dir, dir_old,
-                                            run8,
-                                            run8_ST)
 
-run9_seurat_object <- generate_seurat_object(main_dir, dir_old,
-                                            run9,
-                                            run9_ST)
 
-C1001_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
-                                            C1001,
-                                            C1001_ST)
+Exp_1_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            Experiment_1,
+                                            Experiment_1_ST)
 
-C1002_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
-                                            C1002,
-                                            C1002_ST)
+Exp_2_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            Experiment_2,
+                                            Experiment_2_ST)
 
-C1003_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
-                                            C1003,
-                                            C1003_ST)
+Exp_3_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            Experiment_3,
+                                            Experiment_3_ST)
 
-y2_seurat_object <- generate_seurat_object(main_dir, dir_young,
-                                            y2,
-                                            y2_ST)
+Exp_4_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            Experiment_4,
+                                            Experiment_4_ST)
 
-y3_seurat_object <- generate_seurat_object(main_dir, dir_young,
-                                            y3,
-                                            y3_ST)
+Exp_5_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            Experiment_5,
+                                            Experiment_5_ST)
 
-y4_seurat_object <- generate_seurat_object(main_dir, dir_young,
-                                            y4,
-                                            y4_ST)
 
-y5_seurat_object <- generate_seurat_object(main_dir, dir_young,
-                                            y5,
-                                            y5_ST)
+Exp_6_seurat_object <- generate_seurat_object(main_dir, dir_old,
+                                            Experiment_6,
+                                            Experiment_6_ST)
 
-y6_seurat_object <- generate_seurat_object(main_dir, dir_young,
-                                            y6,
-                                            y6_ST)
+Exp_7_seurat_object <- generate_seurat_object(main_dir, dir_old,
+                                            Experiment_7,
+                                            Experiment_7_ST)
+
+
+
+Exp_8_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
+                                            Experiment_8,
+                                            Experiment_8_ST)
+
+
+Exp_9_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
+                                            Experiment_9,
+                                            Experiment_9_ST)
+
+Exp_10_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
+                                            Experiment_10,
+                                            Experiment_10_ST)
+
+
 ```
 
 #4. Define main directory of output data
@@ -174,29 +197,33 @@ per_cartridge_analysis_rds <- './rds_files/per_cartridge_analysis'
 #5. Save Seurat objects
 ```{r save_results}
 #save Seurat objects for each cartridge
-saveRDS(run8_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, run8_name))
 
-saveRDS(run9_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, run9_name))
+saveRDS(Exp_1_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            Experiment_1_name))
 
-saveRDS(C1001_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, C1001_name))
+saveRDS(Exp_2_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            Experiment_2_name))
 
-saveRDS(C1002_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, C1002_name))
+saveRDS(Exp_3_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            Experiment_3_name))
 
-saveRDS(C1003_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, C1003_name))
+saveRDS(Exp_4_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            Experiment_4_name))
 
-saveRDS(y2_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
-                                            y2_name))
+saveRDS(Exp_5_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            Experiment_5_name))
 
-saveRDS(y3_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
-                                            y3_name))
+saveRDS(Exp_6_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds,             Experiment_6_name))
 
-saveRDS(y4_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
-                                            y4_name))
-saveRDS(y5_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
-                                            y5_name))
+saveRDS(Exp_7_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_7_name))
 
-saveRDS(y6_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
-                                            y6_name))
+saveRDS(Exp_8_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_8_name))
+
+saveRDS(Exp_9_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_9_name))
+
+saveRDS(Exp_10_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_10_name))
+
+
 ```
 
 #Appendix
@@ -234,30 +261,31 @@ analyze_abseq <- function(seurat_object){
 #Analyze mRNA and AbSeq implementation
 ```{r}
 #analyze mRNA modality 
-run8_seurat_object <- analyze_mrna(run8_seurat_object)
-run9_seurat_object <- analyze_mrna(run9_seurat_object)
-C1001_seurat_object <- analyze_mrna(C1001_seurat_object)
-C1002_seurat_object <- analyze_mrna(C1002_seurat_object)
-C1003_seurat_object <- analyze_mrna(C1003_seurat_object)
-y2_seurat_object <- analyze_mrna(y2_seurat_object)
-y3_seurat_object <- analyze_mrna(y3_seurat_object)
-y4_seurat_object <- analyze_mrna(y4_seurat_object)
-y5_seurat_object <- analyze_mrna(y5_seurat_object)
-y6_seurat_object <- analyze_mrna(y6_seurat_object)
+Exp_1_seurat_object <- analyze_mrna(Exp_1_seurat_objectt)
+Exp_2_seurat_object <- analyze_mrna(Exp_2_seurat_object)
+Exp_3_seurat_object <- analyze_mrna(Exp_3_seurat_object)
+Exp_4_seurat_object <- analyze_mrna(Exp_4_seurat_object)
+Exp_5_seurat_object <- analyze_mrna(Exp_5_seurat_object)
+Exp_6_seurat_object <- analyze_mrna(Exp_6_seurat_object)
+Exp_7_seurat_object <- analyze_mrna(Exp_7_seurat_object)
+Exp_8_seurat_object <- analyze_mrna(Exp_8_seurat_object)
+Exp_9_seurat_object <- analyze_mrna(Exp_9_seurat_object)
+Exp_10_seurat_object <- analyze_mrna(Exp_10_seurat_object)
+
 
 #analyze abseq modality
 
 #NOTE: final seurat_clusters in meta_data will relate to clusters calculated based on abseq params
-run8_seurat_object <- analyze_abseq(run8_seurat_object)
-run9_seurat_object <- analyze_abseq(run9_seurat_object)
-C1001_seurat_object <- analyze_abseq(C1001_seurat_object)
-C1002_seurat_object <- analyze_abseq(C1002_seurat_object)
-C1003_seurat_object <- analyze_abseq(C1003_seurat_object)
-y2_seurat_object <- analyze_abseq(y2_seurat_object)
-y3_seurat_object <- analyze_abseq(y3_seurat_object)
-y4_seurat_object <- analyze_abseq(y4_seurat_object)
-y5_seurat_object <- analyze_abseq(y5_seurat_object)
-y6_seurat_object <- analyze_abseq(y6_seurat_object)
+Exp_1_seurat_object <- analyze_abseq(Exp_1_seurat_object)
+Exp_2_seurat_object <- analyze_abseq(Exp_2_seurat_object)
+Exp_3_seurat_object <- analyze_abseq(Exp_3_seurat_object)
+Exp_4_seurat_object <- analyze_abseq(Exp_4_seurat_object)
+Exp_5_seurat_object <- analyze_abseq(Exp_5_seurat_object)
+Exp_6_seurat_object <- analyze_abseq(Exp_6_seurat_object)
+Exp_7_seurat_object <- analyze_abseq(Exp_7_seurat_object)
+Exp_8_seurat_object <- analyze_abseq(Exp_8_seurat_object)
+Exp_9_seurat_object <- analyze_abseq(Exp_9_seurat_object)
+Exp_10_seurat_object <- analyze_abseq(Exp_10_seurat_object)
 ```
 
 #Function - assign age groups
