@@ -16,7 +16,6 @@ SeuratObject         4.1.3
 SingleCellExperiment 1.18.1
 S4Vectors            0.34.0
 SummarizedExperiment 1.26.1
-TrajectoryUtils      1.4.0
 caret                6.0-93
 condiments           1.4.0
 dismo                1.3-9
@@ -281,6 +280,7 @@ tinytex             0.35
 tmp                 0.1.2
 TMB                 1.7.21
 tradeSeq            1.16.0
+TrajectoryUtils     1.4.0
 TTR                 0.25.8
 units               0.8-2
 usethis             2.1.6
