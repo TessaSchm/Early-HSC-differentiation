@@ -166,22 +166,27 @@ ggsave("Violinplot_CD38.pdf", VlnPlot(CCA_mrna_combined_cartridges_annotated_mid
        device = "pdf",width = 8, height = 4)
 ```
 
-## 6. Overlap figure for CD34CD38 sorted cells 
+## 6. Overlap figure for CD34CD38 sorted cells
+
+####remove CD34+CD38- cells from midage and old samples
+
+
 ```{r}
 
-CD34CD38 <-c("004CD34CD38",  "012CD34CD38", "018CD34CD38", "019CD34CD38", "SampleTag02_hs", "SampleTag04_hs", "SampleTag06_hs", "SampleTag08_hs", "SampleTag10_hs", "SampleTag12_hs")
+CD34CD38 <-c("old4_CD34CD38",  "old12_CD34CD38", "old18_CD34CD38", "old19_CD34CD38", "midage8_CD34CD38", "midage11_CD34CD38", "midage10_CD34CD38", "midage15_CD34CD38", "midage2_CD34CD38", "midage14_CD34CD38")
 
 CCA_mrna_combined_cartridges_annotated$CD34CD38 <- ""
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "004CD34CD38", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "012CD34CD38", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "018CD34CD38", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "019CD34CD38", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag02_hs", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag04_hs", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag06_hs", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag08_hs", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag10_hs", "CD34CD38"] <- "CD34CD38"
-CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$Sample_Name == "SampleTag12_hs", "CD34CD38"] <- "CD34CD38"
+
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "old4_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "old12_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "old18_CD34CD3", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "old19_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "midage8_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "midage11_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "midage10_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "midage15_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "midage2_CD34CD38", "CD34CD38"] <- "CD34CD38"
+CCA_mrna_combined_cartridges_annotated@meta.data[CCA_mrna_combined_cartridges_annotated$sample == "midage14_CD34CD38", "CD34CD38"] <- "CD34CD38"
 
 Idents(CCA_mrna_combined_cartridges_annotated) <- CCA_mrna_combined_cartridges_annotated$CD34CD38
 ggsave("Figure1_UMAPcd38-greyred.pdf", DimPlot(CCA_mrna_combined_cartridges_annotated, pt.size = NULL, sizes.highlight = 0.1, cells.highlight = Cells(subset(CCA_mrna_combined_cartridges_annotated, idents = c("CD34CD38")))) + NoAxes () + NoLegend() +
