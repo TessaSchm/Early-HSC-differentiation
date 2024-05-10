@@ -17,6 +17,7 @@ caret                 6.0-93
 condiments            1.4.0
 data.table            1.15.4
 destiny               3.16.0
+DESeq2                1.40.2
 dismo                 1.3-14
 dittoSeq              1.14.2
 dplyr                 1.1.0
@@ -26,6 +27,7 @@ GenomeInfoDb          1.38.8
 GenomicRanges         1.54.1
 ggplot2               3.5.0
 ggrepel               0.9.5
+glmGlamPois           1.12.2
 gridExtra             2.3
 IRanges               2.36.0
 lattice               0.20-45
