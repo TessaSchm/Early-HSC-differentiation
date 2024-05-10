@@ -59,7 +59,7 @@ generate_seurat_object <- function(main_dir, dir_in,
   expression_matrix_counts_mrna_abseq_object <- subset(expression_matrix_counts_mrna_abseq_object, subset = Sample_Tag != "Multiplet")
   expression_matrix_counts_mrna_abseq_object <- subset(expression_matrix_counts_mrna_abseq_object, subset = Sample_Tag != "Undetermined")
 
-  #remove BM ST in young donors
+  #remove PB ST in young donors
   expression_matrix_counts_mrna_abseq_object <- subset(expression_matrix_counts_mrna_abseq_object, subset = Sample_Name != "PB")
 
   #output object
