@@ -1,7 +1,7 @@
 # Early-HSC-differentiation
 The code in this repository is relevant to the combined analysis of the data associated with the following studies:
 
-[00_CSV files](folder100_CSV_files/) 
+[00_CSV files](00_CSV_files/) 
 - This folder contains the csv source files used in this study. The accompanying excel sheet provides comprehensive information and descriptions regarding the utilized BM samples.
 
 [01_Data processing and transformation](01_Data_processing_and_transformation) 
