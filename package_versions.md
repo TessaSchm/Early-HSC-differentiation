@@ -4,8 +4,7 @@
 [R packages used for data analysis section 01](01_Data_processing_and_transformation)
 
 - Analysis were performed using R version 4.2.0 (2022-04-22)
-- Seurat package v. 4.1.1 was used for initial processing and and Seurat package (v.
-  4.3.0) for further data analysis.
+- Seurat package (v.4.1.1) was used for initial processing and Seurat package (v.4.3.0) for further data analysis.
 
   
 [R packages used for data analysis section 02](02_Data_analysis_and_visualization)
