@@ -1,0 +1,275 @@
+---
+title: "01_per_cartridge_analysis"
+author: "Edyta Kowalczyk"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r}
+library(Seurat)
+library(dplyr)
+library(dittoSeq)
+library(ggplot2)
+```
+
+#1. Function Generate seurat object for each cartridge with mRNA and AbSeq
+```{r}
+generate_seurat_object <- function(main_dir, dir_in,
+                                   input_file_name,
+                                   input_smk_calls) {
+  #add cell indexes as row names
+  expression_matrix <- read.csv(sprintf("%s/%s/%s", main_dir, dir_in,
+                                        input_file_name),skip=7)
+  
+  expression_matrix_counts <- expression_matrix[,c(2:ncol(expression_matrix))]
+  rownames(expression_matrix_counts) <- expression_matrix$Cell_Index
+  
+  #create abseq matrix
+  expression_matrix_counts_abseq <- expression_matrix_counts[,grep("pAb",colnames(expression_matrix_counts))]
+  abseq_names <- colnames(expression_matrix_counts_abseq)
+
+  #create mrna matrix
+  expression_matrix_counts_mrna <- expression_matrix_counts[,!grepl("pAb",colnames(expression_matrix_counts))]
+
+  #adjust abseq names
+  haas_abseq_names <- gsub("\\..*","-AB",abseq_names)
+  colnames(expression_matrix_counts_abseq) <- haas_abseq_names
+
+  #create seurat abseq object
+  expression_matrix_counts_abseq_object <- CreateSeuratObject(t(expression_matrix_counts_abseq), project = "SeuratProject", assay = "Abseq", min.cells = 0, min.features = 0, names.field = 1, names.delim = "_", meta.data = NULL)
+
+  #create seurat mrna object
+  expression_matrix_counts_mrna_object<-CreateSeuratObject(t(expression_matrix_counts_mrna), project = "SeuratProject", assay = "RNA", min.cells = 0, min.features = 0, names.field = 1, names.delim = "_", meta.data = NULL)
+
+  #create abseq assay
+  RSEC_adt_assay <- CreateAssayObject(counts = t(expression_matrix_counts_abseq), min.cells = 0, min.features = 0)
+
+  #add abseq assay to mrna object
+  expression_matrix_counts_mrna_object[["Abseq_RSEC"]] <- RSEC_adt_assay
+  expression_matrix_counts_mrna_abseq_object <- expression_matrix_counts_mrna_object
+
+  #add ST information
+  smk <- read.table(sprintf("%s/%s/%s", main_dir, dir_in, input_smk_calls), sep = ',', header = TRUE, row.names = 1)
+  expression_matrix_counts_mrna_abseq_object <- AddMetaData(expression_matrix_counts_mrna_abseq_object, metadata = smk)
+
+  #remove the multiplets and undetermined from analysis 
+  expression_matrix_counts_mrna_abseq_object <- subset(expression_matrix_counts_mrna_abseq_object, subset = Sample_Tag != "Multiplet")
+  expression_matrix_counts_mrna_abseq_object <- subset(expression_matrix_counts_mrna_abseq_object, subset = Sample_Tag != "Undetermined")
+
+  #remove BM ST in young donors
+  expression_matrix_counts_mrna_abseq_object <- subset(expression_matrix_counts_mrna_abseq_object, subset = Sample_Name != "PB")
+
+  #output object
+  return(expression_matrix_counts_mrna_abseq_object)
+}
+```
+
+#2. Define main directory of input data and cartridge names
+```{r define_input_dirs_and_files}
+main_dir <- './input_data/csv_data'
+
+#define sub dirs (per age groups)
+dir_old <- 'old'
+dir_mid_age <- 'mid_age'
+dir_young <- 'young'
+
+###data files##
+
+#old
+run9 <- 'Combined_Rieger_Run9_Index3_RSEC_MolsPerCell.csv'
+run9_ST <- 'Rieger_Run9_Index3_Sample_Tag_Calls.csv'
+run9_name <- 'run9'
+
+run8 <- 'Combined_Rieger_Run8_Index2_RSEC_MolsPerCell.csv'
+run8_ST <- 'Rieger_Run8_Index2_Sample_Tag_Calls.csv'
+run8_name <- 'run8'
+
+#mid age
+C1001 <- 'Combined_P18159_1001_RSEC_MolsPerCell.csv'
+C1001_ST <- 'P18159_1001_Sample_Tag_Calls.csv'
+C1001_name <- '1001'
+
+C1002 <- 'Combined_P18159_1002_RSEC_MolsPerCell.csv'
+C1002_ST <- 'P18159_1002_Sample_Tag_Calls.csv'
+C1002_name <- '1002'
+
+C1003 <- 'Combined_P18159_1003_RSEC_MolsPerCell.csv'
+C1003_ST <- 'P18159_1003_Sample_Tag_Calls.csv'
+C1003_name <- '1003'
+
+#young
+y2 <- '_1_Combined_HD2_RSEC_MolsPerCell.csv'
+y2_ST <- '_1_HD2_Sample_Tag_Calls.csv'
+y2_name <- 'young2'
+
+y3 <- '_1_Combined_HD3_RSEC_MolsPerCell.csv'
+y3_ST <- '_1_HD3_Sample_Tag_Calls.csv'
+y3_name <- 'young3'
+
+y4 <- '_1_Combined_HD4_RSEC_MolsPerCell.csv'
+y4_ST <- '_1_HD4_Sample_Tag_Calls.csv'
+y4_name <- 'young4'
+
+y5 <- '_4_Combined_HD5_RSEC_MolsPerCell.csv'
+y5_ST <- '_4_HD5_Sample_Tag_Calls.csv'
+y5_name <- 'young5'
+
+y6 <- '_4_Combined_HD6_RSEC_MolsPerCell.csv'
+y6_ST <- '_4_HD6_Sample_Tag_Calls.csv'
+y6_name <- 'young6'
+```
+
+#3. Implement Generate Seurat objects for each cartridge
+```{r run_anlaysis}
+run8_seurat_object <- generate_seurat_object(main_dir, dir_old,
+                                            run8,
+                                            run8_ST)
+
+run9_seurat_object <- generate_seurat_object(main_dir, dir_old,
+                                            run9,
+                                            run9_ST)
+
+C1001_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
+                                            C1001,
+                                            C1001_ST)
+
+C1002_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
+                                            C1002,
+                                            C1002_ST)
+
+C1003_seurat_object <- generate_seurat_object(main_dir, dir_mid_age,
+                                            C1003,
+                                            C1003_ST)
+
+y2_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            y2,
+                                            y2_ST)
+
+y3_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            y3,
+                                            y3_ST)
+
+y4_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            y4,
+                                            y4_ST)
+
+y5_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            y5,
+                                            y5_ST)
+
+y6_seurat_object <- generate_seurat_object(main_dir, dir_young,
+                                            y6,
+                                            y6_ST)
+```
+
+#4. Define main directory of output data
+```{r define_output_dir}
+#outdir for rds files to store the analysis 
+per_cartridge_analysis_rds <- './rds_files/per_cartridge_analysis'
+```
+
+#5. Save Seurat objects
+```{r save_results}
+#save Seurat objects for each cartridge
+saveRDS(run8_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, run8_name))
+
+saveRDS(run9_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, run9_name))
+
+saveRDS(C1001_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, C1001_name))
+
+saveRDS(C1002_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, C1002_name))
+
+saveRDS(C1003_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, C1003_name))
+
+saveRDS(y2_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            y2_name))
+
+saveRDS(y3_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            y3_name))
+
+saveRDS(y4_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            y4_name))
+saveRDS(y5_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            y5_name))
+
+saveRDS(y6_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
+                                            y6_name))
+```
+
+#Appendix
+#Analyze mRNA and AbSeq function - inital settings
+```{r}
+#mRNA analysis
+analyze_mrna <- function(seurat_object){
+  DefaultAssay(seurat_object) <- "RNA"
+  seurat_object <- NormalizeData(seurat_object)
+  seurat_object <- FindVariableFeatures(seurat_object, selection.method = "mvp")
+  VariableFeatures(seurat_object)<-rownames(seurat_object[["RNA"]])
+  seurat_object <- ScaleData(seurat_object)
+  seurat_object <- RunPCA(seurat_object, approx=FALSE, verbose = FALSE)
+
+  nPC_mrna <- 20
+  seurat_object <- FindNeighbors(seurat_object, dims = 1:nPC_mrna, verbose = FALSE)
+  seurat_object <- FindClusters(seurat_object, resolution = 0.8, verbose = FALSE)
+  seurat_object <- RunUMAP(seurat_object, dims = 1:nPC_mrna, verbose = FALSE)
+  return(seurat_object)
+}
+
+#abseq analysis
+analyze_abseq <- function(seurat_object){
+  DefaultAssay(seurat_object) <- 'Abseq_RSEC'
+  VariableFeatures(seurat_object) <- rownames(seurat_object[["Abseq_RSEC"]])
+  seurat_object <- NormalizeData(seurat_object, normalization.method = 'CLR', margin = 2) %>% ScaleData() %>% RunPCA(reduction.name = 'apca', approx = FALSE)
+  seurat_object <- RunUMAP(seurat_object, reduction = 'apca', dims = 1:15, assay = 'Abseq_RSEC', reduction.name = 'adt.umap', reduction.key = 'adtUMAP_', verbose = FALSE)
+  seurat_object <- RunPCA(seurat_object, npcs = 50, verbose = FALSE, approx = FALSE)
+  seurat_object <- FindNeighbors(seurat_object, dims = 1:30, verbose = FALSE)
+  seurat_object <- FindClusters(seurat_object, resolution = 0.8, verbose = FALSE)
+  return(seurat_object)
+}
+```
+
+#Analyze mRNA and AbSeq implementation
+```{r}
+#analyze mRNA modality 
+run8_seurat_object <- analyze_mrna(run8_seurat_object)
+run9_seurat_object <- analyze_mrna(run9_seurat_object)
+C1001_seurat_object <- analyze_mrna(C1001_seurat_object)
+C1002_seurat_object <- analyze_mrna(C1002_seurat_object)
+C1003_seurat_object <- analyze_mrna(C1003_seurat_object)
+y2_seurat_object <- analyze_mrna(y2_seurat_object)
+y3_seurat_object <- analyze_mrna(y3_seurat_object)
+y4_seurat_object <- analyze_mrna(y4_seurat_object)
+y5_seurat_object <- analyze_mrna(y5_seurat_object)
+y6_seurat_object <- analyze_mrna(y6_seurat_object)
+
+#analyze abseq modality
+
+#NOTE: final seurat_clusters in meta_data will relate to clusters calculated based on abseq params
+run8_seurat_object <- analyze_abseq(run8_seurat_object)
+run9_seurat_object <- analyze_abseq(run9_seurat_object)
+C1001_seurat_object <- analyze_abseq(C1001_seurat_object)
+C1002_seurat_object <- analyze_abseq(C1002_seurat_object)
+C1003_seurat_object <- analyze_abseq(C1003_seurat_object)
+y2_seurat_object <- analyze_abseq(y2_seurat_object)
+y3_seurat_object <- analyze_abseq(y3_seurat_object)
+y4_seurat_object <- analyze_abseq(y4_seurat_object)
+y5_seurat_object <- analyze_abseq(y5_seurat_object)
+y6_seurat_object <- analyze_abseq(y6_seurat_object)
+```
+
+#Function - assign age groups
+```{r}
+assign_age_groups <- function(object){
+  #create age groups from sample names
+  object$sample %>% 
+  str_split("1|2|3|4|5|6|8|_") %>% lapply(., "[", 1) %>% as.character() -> age_group_list
+  
+  #add age group to meta data
+  object$age_group <- age_group_list
+  
+  return(object)
+}
+```

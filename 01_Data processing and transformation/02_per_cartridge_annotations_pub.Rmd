@@ -1,0 +1,96 @@
+---
+title: "02_per_cartridge_annotations"
+author: "Edyta Kowalczyk"
+output: html_document
+---
+
+```{r}
+library(Seurat)
+library(dplyr)
+library(dittoSeq)
+library(ggplot2)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+#1. Load reference dataset
+```{r}
+#load reference dataset from triana et al.
+#can be downloaded here : https://figshare.com/articles/dataset/Expression_of_97_surface_markers_and_RNA_transcriptome_wide_in_13165_cells_from_a_healthy_young_bone_marrow_donor/13397987
+
+WTA_project <- readRDS("./WTA_projected.rds")
+```
+
+#2. Function - annotate modalities (abSeq, mRNA)
+```{r}
+#annotate with WTA reference
+annotate_modalities <- function(object, annotation_object){
+  #anotate mrna modality
+  DefaultAssay(object) <-"RNA"
+  anchors_mrna <- FindTransferAnchors(reference = annotation_object, 
+                               query = object,
+                               dims = 1:30, 
+                               reference.reduction = "pca",
+                               features = rownames(object))
+  predictions_mrna <- TransferData(anchorset = anchors_mrna, refdata = annotation_object$Prediction_HCA, dims = 1:30)
+  
+  object <- AddMetaData(object, metadata = predictions_mrna$predicted.id, col.name = 'predictions_mrna')
+  
+  #anotate abseq modality
+  DefaultAssay(object) <- "Abseq_RSEC"
+  anchors_abseq <- FindTransferAnchors(reference = annotation_object, 
+                               query = object,
+                               dims = 1:15, 
+                               reference.reduction = "pca",
+                               features = rownames(object))
+  predictions_abseq <- TransferData(anchorset = anchors_abseq, refdata = annotation_object$Prediction_HCA, dims = 1:15)
+  object <- AddMetaData(object, metadata = predictions_abseq$predicted.id, col.name = 'predictions_abseq')
+  
+  return(object)
+}
+```
+
+#3. Run annotation analysis
+```{r}
+# run annotations analysis
+run9_annotated <- annotate_modalities(run9_seurat_object, WTA_project)
+run8_annotated <- annotate_modalities(run8_seurat_object, WTA_project)
+C1001_annotated <- annotate_modalities(C1001_seurat_object, WTA_project)
+C1002_annotated <- annotate_modalities(C1002_seurat_object, WTA_project)
+C1003_annotated <- annotate_modalities(C1003_seurat_object, WTA_project)
+y2_annotated <- annotate_modalities(y2_seurat_object, WTA_project)
+y3_annotated <- annotate_modalities(y3_seurat_object, WTA_project)
+y4_annotated <- annotate_modalities(y4_seurat_object, WTA_project)
+y5_annotated <- annotate_modalities(y5_seurat_object, WTA_project)
+y6_annotated <- annotate_modalities(y6_seurat_object, WTA_project)
+```
+
+#4. Save annotated data
+```{r}
+#save annotated objects
+saveRDS(run8_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, run8_name))
+
+saveRDS(run9_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, run9_name))
+
+saveRDS(C1001_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, C1001_name))
+
+saveRDS(C1002_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, C1002_name))
+
+saveRDS(C1003_seurat_object, sprintf("%s/annotated_%s.rds", per_cartridge_analysis_rds, C1003_name))
+
+saveRDS(y2_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
+                                            y2_name))
+
+saveRDS(y3_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
+                                            y3_name))
+
+saveRDS(y4_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
+                                            y4_name))
+saveRDS(y5_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
+                                            y5_name))
+
+saveRDS(y6_seurat_object, sprintf("%s/annotated_%s.rds",per_cartridge_analysis_rds,
+                                            y6_name))
+```

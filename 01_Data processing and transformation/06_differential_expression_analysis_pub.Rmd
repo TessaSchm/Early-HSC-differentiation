@@ -1,0 +1,205 @@
+---
+title: "06_differential_expression_analysis"
+author: "Edyta Kowalczyk"
+output: html_document
+---
+
+```{r}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r}
+library(data.table)
+library(datasets)
+library(matrixStats)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(patchwork)
+library(Seurat)
+library(tradeSeq)
+library(stringr)
+library(dittoSeq)
+library(readr)
+library(rio)
+library(scater)
+```
+#Find Conserved Markers
+##Function - assign age groups
+```{r}
+assign_age_groups <- function(object){
+  #create age groups from sample names
+  object$sample %>% 
+  str_split("1|2|3|4|5|6|8|_") %>% lapply(., "[", 1) %>% as.character() -> age_group_list
+  
+  #add age group to meta data
+  object$age_group <- age_group_list
+  
+  return(object)
+}
+```
+
+##1. Function - find conserved markers for each cluster
+```{r}
+#find conserved markers for each cluster clusters
+find_markers <- function(input_object, assay, gruping_variable){
+  DefaultAssay(input_object) <- assay
+  Idents(input_object) <- "seurat_clusters"
+  
+  #get number of clusters
+  n = input_object$seurat_clusters %>% unique() %>% length()
+  
+  #create an empty list
+  marker_genes_list = vector("list", length = n)
+  
+  #run marker identification for each cluster
+  for (i in 1:n) {
+    ix = i - 1
+    markers_clusters <- FindConservedMarkers(input_object, grouping.var = gruping_variable, ident.1 = ix, assay = assay)
+    #markers_clusters$i <- i
+    marker_genes_list[[i]] <- markers_clusters
+    }
+  return(marker_genes_list)
+}
+```
+
+##2. Function - average FC values accross groups
+```{r}
+#select most up/down regulated genes
+#average log fold change across groups (samples in that case)
+generate_table_FCs <- function(marker_genes_list){
+  
+  FC_list = vector("list", length = length(marker_genes_list))
+  
+  for (i in 1:length(marker_genes_list)){
+  log_FC_in_groups <- marker_genes_list[[i]] %>% dplyr::select(contains("log2FC"))
+  log_FC_in_groups['mean'] <- rowMeans(log_FC_in_groups)
+  log_FC_in_groups['max'] <- apply(log_FC_in_groups, 1, max, na.rm=TRUE)
+  FC_list[[i]] <- log_FC_in_groups
+  }
+  return(FC_list)
+}
+```
+
+##3. Function - select the genes above FC value (>1)
+```{r}
+#get lists with fold change above 1
+filer_FCs <- function(FC_list){
+  
+  filtered_tables = vector("list", length = length(FC_list))
+  
+  for (i in 1:length(FC_list)){
+    max_FC_table <- filter(FC_list[[i]], max >= 1.0)
+    filtered_tables[[i]] <- max_FC_table
+  }
+  return(filtered_tables)
+}
+```
+
+
+##4. Run conserved markers analysis - combined data CCA: conserved markers by age group: on seurat clusters 
+```{r}
+#assign sample names/tags by age group if not done before
+CCA_mrna_combined_cartridges_annotated <- assign_age_groups(CCA_mrna_combined_cartridges_annotated)
+
+#get conserved markers for clusters
+CCA_mrna_cluster_conserved_markers_unfiltered <- find_markers(CCA_mrna_combined_cartridges_annotated, "RNA", "age_group")
+
+#get the fold change tables for clusters
+FCs_mrna_cluster_conserved_markers_unfiltered <- generate_table_FCs(CCA_mrna_cluster_conserved_markers_unfiltered)
+
+#filter tables in list of conserved markers based on FC
+FCs_mrna_cluster_conserved_markers <- filer_FCs(FCs_mrna_cluster_conserved_markers_unfiltered)
+```
+
+##5. Get list of genes for visualization - age group conserved genes
+```{r}
+conserved_markers_up_list <- lapply(FCs_mrna_cluster_conserved_markers, rownames)
+conserved_markers_up <- unlist(conserved_markers_up_list) %>% unique()
+```
+
+#FindAllMarkers
+
+##1. FindAllMarkers CCA
+```{r}
+#run analysis with minimal thresholds
+cca_mrna_find_all_markers_T1 <- FindAllMarkers(CCA_mrna_combined_cartridges_annotated, assay = "RNA", min.pct = 0.25, logfc.threshold = 1.0)
+
+#extract the gene names
+gene_names_all_markers_T1 <- cca_mrna_find_all_markers_T1$gene %>% unique()
+
+#get genes above threshold (p-value & FC)
+cca_mrna_find_all_markers_T1_filtered_pvalue <- subset(cca_mrna_find_all_markers_T1, p_val_adj < 0.001)
+cca_mrna_find_all_markers_T1_filtered_pvalue_FC <- subset(cca_mrna_find_all_markers_T1, avg_log2FC > 1.5)
+
+#extract the gene names (get gene names for visualizations)
+all_marker_filtered_names <- cca_mrna_find_all_markers_T1_filtered_pvalue_FC$gene %>% unique()
+```
+
+#Save GENEs lists
+```{r}
+dir <- "the_directory_to_save_data"
+
+#example
+write.csv(gene_names_all_markers_T1, file = sprintf("%s/LIST_cluster_markers_cca_mrna_find_all_markers_T1.5.csv", dir), quote=FALSE)
+```
+
+
+```{r}
+# output the restul in csv file
+dir_imm <- ""
+write_csv(young.sig, file = sprintf("%s/marker_genes_young_vs_others_FC_1_pval_0.05.csv", dir_imm))
+```
+
+#DEA visualizations 
+##1. Heatmap DITTO
+
+```{r}
+cca_mrna_up_heatmap_find_all_markers <- dittoHeatmap(CCA_mrna_combined_cartridges_annotated, annot.by = c("seurat_clusters"),
+                                    genes = conserved_markers_up,
+                                    scaled.to.max	= TRUE)
+```
+
+##2. Dot Heatmap DITTO
+```{r}
+#group by clusters, change the group.by parameters to organzize heatmap by different labels
+dotplot <- dittoDotPlot(CCA_mrna_combined_cartridges_annotated,
+             conserved_markers_up,
+             group.by = "seurat_clusters",
+             min.color = "blue", max.color = "red")
+```
+
+##3. Do AbSeq overlays
+```{r}
+#overlay for all AbSeqs
+DefaultAssay(CCA_mrna_combined_cartridges_annotated) <- "Abseq_RSEC"
+
+abseq_overlay <- FeaturePlot(CCA_mrna_combined_cartridges_annotated, features = rownames(CCA_mrna_combined_cartridges_annotated), reduction = 'umap', ncol = 5)
+
+#Note: to plot only chosen abseqs you need to provide vector of AbSeq names you want to see visualizations for as in below example
+selected_abseqs <- c("CD38-AB","CD34-AB")
+abseq_overlay_selected_abseq <- FeaturePlot(CCA_mrna_combined_cartridges_annotated, features = selected_abseqs, reduction = 'umap', ncol = 2)
+```
+
+#Appendix
+##Function - filter on max and mean FC values
+```{r}
+#filter on mean value of FC 
+filer_FCs <- function(FC_list){
+  
+  filtered_tables = vector("list", length = length(FC_list))
+  filtered_tables_mean = vector("list", length = length(FC_list))
+  
+  for (i in 1:length(FC_list)){
+    max_FC_table <- filter(FC_list[[i]], max >= 1.5)
+    filtered_tables[[i]] <- max_FC_table
+  }
+  
+  for (i in 1:length(FC_list)){
+    mean_FC_table <- filter(filtered_tables[[i]], mean >= 1.0)
+    filtered_tables_mean[[i]] <- mean_FC_table
+  }
+  
+  return(filtered_tables_mean)
+}
+```

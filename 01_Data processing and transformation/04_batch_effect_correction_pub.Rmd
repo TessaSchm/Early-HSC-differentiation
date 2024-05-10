@@ -1,0 +1,88 @@
+---
+title: "04_batch_effect_correction"
+author: "Edyta Kowalczyk"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(stringr)
+library(Seurat)
+library(dittoSeq)
+library(sceasy)
+library(reticulate)
+library(anndata)
+#use_condaenv('base')
+```
+
+
+#CCA integration
+```{r}
+#requires high resources, analysis run at final on c5.18xlarge instance
+```
+
+#1. Functions sample list generation & data integration 
+```{r, echo=FALSE}
+#params: 
+## assay_name: assay to be used: "RNA" or "Abseq_RSEC"
+## number of features RNA = 2000, Abseq = 46
+
+#1. Create Sample Lists
+sample_lists <- function(object, assay_name, features_number){
+  
+  #chose assay
+  DefaultAssay(object) <- assay_name
+ 
+  #split object by sample
+  seurat.list <- SplitObject(object, split.by = "sample")
+  
+  #find variable features in each object
+  seurat.list <- lapply(X = seurat.list, FUN = function(x) {
+    x <- NormalizeData(x)
+    x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = features_number)
+    })
+  
+  #select integration features in each sample object
+  features_all <- SelectIntegrationFeatures(object.list = seurat.list)
+  
+  #generate PCs for each sample
+  seurat.list <- lapply(X = seurat.list, FUN = function(x) {
+  x <- ScaleData(x, features = features_all, verbose = FALSE)
+  x <- RunPCA(x, features = features_all, verbose = FALSE, approx = FALSE)
+  })
+  return(list(object_list = seurat.list, features = features_all))
+}
+```
+
+#2. Function - analyze integrated data
+```{r}
+# 2. run analysis on integrated data
+analyze_integrated <- function(new_assay_name, object, n_dims){
+  DefaultAssay(object) <- new_assay_name
+  object <- ScaleData(object, verbose = FALSE)
+  object <- RunPCA(object, npcs = 50, verbose = FALSE, approx = TRUE)
+  object <- RunUMAP(object, dims = 1:n_dims)
+  object <- FindNeighbors(object, dims = 1:n_dims)
+  object <- FindClusters(object)
+  return(object)
+}
+```
+
+#3. Implement - Integrate mRNA (CCA)
+```{r}
+# Integrate full dataset
+CCA_mrna_combined_cartridges_annotated <- readRDS('./rds_files/combined/CCA_mrna_combined_cartridges_annotated.rds')
+object_mrna <- CCA_mrna_combined_cartridges_annotated
+list[seurat.list.mrna, features_all.mrna] <- sample_lists(object_mrna, "RNA", features_number = 2000)
+anchors_all_mrna <- FindIntegrationAnchors(object.list = seurat.list.mrna, anchor.features = features_all.mrna, k.anchor = 20)
+object_mrna <- IntegrateData(anchorset = anchors_all_mrna, new.assay.name = 'mrna_cca')
+```
+
+#4. Analyze Integrated Data: mRNA (CCA)
+```{r}
+#analyze mrna CCA
+object_mrna <- analyze_integrated('mrna_cca', object_mrna, 20)
+```
