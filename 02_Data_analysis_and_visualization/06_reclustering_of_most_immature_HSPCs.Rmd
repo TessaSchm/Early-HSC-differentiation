@@ -36,16 +36,19 @@ DefaultAssay(dat)<-"mrna_cca"
 
 The below samples are the sorted immature populaiton (spike-in). They are removed from the downstream analysis.
 
-old18_CD34CD38_hs
-old12_CD34CD38_hs
-old4_CD34CD38_hs
-old19_CD34CD38_hs
-midage14_hs
-midage2_hs
-midage11_hs
-midage8_hs
-midage10_hs
-midage15_hs
+old18_CD34CD38
+old12_CD34CD38
+old4_CD34CD38
+old19_CD34CD38
+midage14_CD34CD38
+midage2_CD34CD38
+midage11_CD34CD38
+midage8_CD34CD38
+midage10_CD34CD38
+midage15_CD34CD38
+
+
+
 
 After removing the spike-in samples, PCA and clustering are recalculated.
 
@@ -56,7 +59,7 @@ After removing the spike-in samples, PCA and clustering are recalculated.
 Idents(dat)<-dat$sample
 
 # subset samples
-dat <- subset(dat, idents = c("old18_CD34CD38_hs","old12_CD34CD38_hs","old4_CD34CD38_hs","old19_CD34CD38_hs", "midage14_hs","midage2_hs","midage11_hs","midage8_hs","midage10_hs","midage15_hs"), invert=T)
+dat <- subset(dat, idents = c("old18_CD34CD38","old12_CD34CD38","old4_CD34CD38","old19_CD34CD38", "midage14_CD34CD38","midage2_CD34CD38","midage11_CD34CD38","midage8_CD34CD38","midage10_CD34CD38","midage15_CD34CD38"), invert=T)
 
 # # double check the subset
 # dat$sample %>% unique()
