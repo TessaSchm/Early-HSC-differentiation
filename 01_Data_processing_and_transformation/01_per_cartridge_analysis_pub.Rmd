@@ -213,15 +213,20 @@ saveRDS(Exp_4_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_ana
 saveRDS(Exp_5_seurat_object, sprintf("%s/initial_final_%s.rds",per_cartridge_analysis_rds,
                                             Experiment_5_name))
 
-saveRDS(Exp_6_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds,             Experiment_6_name))
+saveRDS(Exp_6_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds,             
+                                            Experiment_6_name))
 
-saveRDS(Exp_7_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_7_name))
+saveRDS(Exp_7_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, 
+                                            Experiment_7_name))
 
-saveRDS(Exp_8_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_8_name))
+saveRDS(Exp_8_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, 
+                                            Experiment_8_name))
 
-saveRDS(Exp_9_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_9_name))
+saveRDS(Exp_9_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, 
+                                            Experiment_9_name))
 
-saveRDS(Exp_10_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, Experiment_10_name))
+saveRDS(Exp_10_seurat_object, sprintf("%s/initial_final_%s.rds", per_cartridge_analysis_rds, 
+                                            Experiment_10_name))
 
 
 ```
@@ -273,7 +278,7 @@ Exp_9_seurat_object <- analyze_mrna(Exp_9_seurat_object)
 Exp_10_seurat_object <- analyze_mrna(Exp_10_seurat_object)
 
 
-#analyze abseq modality
+#analyze abseq (protein) modality
 
 #NOTE: final seurat_clusters in meta_data will relate to clusters calculated based on abseq params
 Exp_1_seurat_object <- analyze_abseq(Exp_1_seurat_object)
