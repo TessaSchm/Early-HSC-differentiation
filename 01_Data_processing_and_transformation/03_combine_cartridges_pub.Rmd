@@ -61,7 +61,7 @@ Exp_7_annotated$sample <- str_replace_all(Exp_7_annotated$Sample_Tag, new_names_
 
 Exp_8_annotated$sample <- str_replace_all(Exp_8_annotated$Sample_Tag, new_names_exp_8)
 
-Exp_9_annotated$sample <- str_replace_all(Exp_9_annotated$Sample_Tag, new_names_exp_8)
+Exp_9_annotated$sample <- str_replace_all(Exp_9_annotated$Sample_Tag, new_names_exp_9)
 
 Exp_10_annotated$sample <- str_replace_all(Exp_10_annotated$Sample_Tag, new_names_exp_10)
 
