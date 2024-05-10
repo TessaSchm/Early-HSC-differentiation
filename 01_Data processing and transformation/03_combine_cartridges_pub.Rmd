@@ -22,11 +22,11 @@ library(tibble)
 ```{r}
 
 
-Exp_1_annotated$sample <- "young2_CD34"
-Exp_2_annotated$sample <- "young3_CD34"
-Exp_3_annotated$sample <- "young3_CD34"
-Exp_4_annotated$sample <- "young4_CD34"
-Exp_5_annotated$sample <- "young5_CD34"
+Exp_1_annotated$sample <- "young2"
+Exp_2_annotated$sample <- "young3"
+Exp_3_annotated$sample <- "young3"
+Exp_4_annotated$sample <- "young4"
+Exp_5_annotated$sample <- "young5"
 
 
 new_names_exp_6 = c("SampleTag03"="old4_CD34",
