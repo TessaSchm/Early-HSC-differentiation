@@ -266,7 +266,7 @@ analyze_abseq <- function(seurat_object){
 #Analyze mRNA and AbSeq implementation
 ```{r}
 #analyze mRNA modality 
-Exp_1_seurat_object <- analyze_mrna(Exp_1_seurat_objectt)
+Exp_1_seurat_object <- analyze_mrna(Exp_1_seurat_object)
 Exp_2_seurat_object <- analyze_mrna(Exp_2_seurat_object)
 Exp_3_seurat_object <- analyze_mrna(Exp_3_seurat_object)
 Exp_4_seurat_object <- analyze_mrna(Exp_4_seurat_object)
