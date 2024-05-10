@@ -20,92 +20,103 @@ library(tibble)
 
 # 1. Annotate sample tag names (per cartridge)
 ```{r}
-y2_annotated$sample <- "young2"
-y3_annotated$sample <- "young3"
-y4_annotated$sample <- "young4"
-y5_annotated$sample <- "young5"
-y6_annotated$sample <-  "young6"
 
-#based on manifest file form customer
-new_names_run8 = c("SampleTag03"="old4_CD34",
+
+Exp_1_annotated$sample <- "young2_CD34"
+Exp_2_annotated$sample <- "young3_CD34"
+Exp_3_annotated$sample <- "young3_CD34"
+Exp_4_annotated$sample <- "young4_CD34"
+Exp_5_annotated$sample <- "young5_CD34"
+
+
+new_names_exp_6 = c("SampleTag03"="old4_CD34",
                    "SampleTag04"="old4_CD34CD38",
                    "SampleTag05"="old18_CD34",
                    "SampleTag06"="old18_CD34CD38")
 
-new_names_run9 = c("SampleTag07"="old12_CD34",
+new_names_exp_7 = c("SampleTag07"="old12_CD34",
                    "SampleTag08"="old12_CD34CD38",
                    "SampleTag09"="old19_CD34",
                    "SampleTag10"="old19_CD34CD38")
 
-new_names_1001 = c("SampleTag09"="midage2_cd34",
-                   "SampleTag10"="midage2",
-                   "SampleTag11"="midage14_cd34",
-                   "SampleTag12"="midage14")
+new_names_exp_8 = c("SampleTag09"="midage2_CD34",
+                   "SampleTag10"="midage2_CD34CD38",
+                   "SampleTag11"="midage14_CD34",
+                   "SampleTag12"="midage14_CD34CD38")
 
-new_names_1002 = c("SampleTag01"="midage8_cd34",
-                   "SampleTag02"="midage8",
-                   "SampleTag03"="midage11_cd34",
-                   "SampleTag04"="midage11")
+new_names_exp_9 = c("SampleTag01"="midage8_CD34",
+                   "SampleTag02"="midage8_CD34CD38",
+                   "SampleTag03"="midage11_CD34",
+                   "SampleTag04"="midage11_CD34CD38")
 
-new_names_1003 = c("SampleTag05"="midage10_cd34",
-                   "SampleTag06"="midage10",
-                   "SampleTag07"="midage15_cd34",
-                   "SampleTag08"="midage15")
+new_names_exp_10 = c("SampleTag05"="midage10_CD34",
+                   "SampleTag06"="midage10_CD34CD38",
+                   "SampleTag07"="midage15_CD34",
+                   "SampleTag08"="midage15_CD34CD38")
 
-C1001_annotated$sample <- str_replace_all(C1001_annotated$Sample_Tag, new_names_1001)
 
-C1002_annotated$sample <- str_replace_all(C1002_annotated$Sample_Tag, new_names_1002)
+Exp_6_annotated$sample <- str_replace_all(Exp_6_annotated$Sample_Tag, new_names_exp_6)
 
-C1003_annotated$sample <- str_replace_all(C1003_annotated$Sample_Tag, new_names_1003)
+Exp_7_annotated$sample <- str_replace_all(Exp_7_annotated$Sample_Tag, new_names_exp_7)
 
-run8_annotated$sample <- str_replace_all(run8_annotated$Sample_Tag, new_names_run8)
+Exp_8_annotated$sample <- str_replace_all(Exp_8_annotated$Sample_Tag, new_names_exp_8)
 
-run9_annotated$sample <- str_replace_all(run9_annotated$Sample_Tag, new_names_run9)
+Exp_9_annotated$sample <- str_replace_all(Exp_9_annotated$Sample_Tag, new_names_exp_8)
+
+Exp_10_annotated$sample <- str_replace_all(Exp_10_annotated$Sample_Tag, new_names_exp_10)
+
+
 ```
 
 # 2. Annotate cell indexes with sample names
 ```{r}
 #Create vector of cell index numbers with prefix separated by underscore
-ix_run8 <- paste(run8_annotated$sample, colnames(run8_annotated), sep = "_")
-ix_run9 <- paste(run9_annotated$sample, colnames(run9_annotated), sep = "_")
 
-ix_1001 <- paste(C1001_annotated$sample, colnames(C1001_annotated), sep = "_")
-ix_1002 <- paste(C1002_annotated$sample, colnames(C1002_annotated), sep = "_")
-ix_1003 <- paste(C1003_annotated$sample, colnames(C1003_annotated), sep = "_")
 
-ix_y2 <- paste(y2_annotated$sample, colnames(y2_annotated), sep = "_")
-ix_y3 <- paste(y3_annotated$sample, colnames(y3_annotated), sep = "_")
-ix_y4 <- paste(y4_annotated$sample, colnames(y4_annotated), sep = "_")
-ix_y5 <- paste(y5_annotated$sample, colnames(y5_annotated), sep = "_")
-ix_y6 <- paste(y6_annotated$sample, colnames(y6_annotated), sep = "_")
+ix_Exp_1 <- paste(Exp_1_annotated$sample, colnames(Exp_1_annotated), sep = "_")
+ix_Exp_2 <- paste(Exp_2_annotated$sample, colnames(Exp_2_annotated), sep = "_")
+ix_Exp_3 <- paste(Exp_3_annotated$sample, colnames(Exp_3_annotated), sep = "_")
+ix_Exp_4 <- paste(Exp_4_annotated$sample, colnames(Exp_4_annotated), sep = "_")
+ix_Exp_5 <- paste(Exp_5_annotated$sample, colnames(Exp_5_annotated), sep = "_")
+
+
+ix_Exp_6 <- paste(Exp_6_annotated$sample, colnames(Exp_6_annotated), sep = "_")
+ix_Exp_7 <- paste(Exp_7_annotated$sample, colnames(Exp_7_annotated), sep = "_")
+
+ix_Exp_8 <- paste(Exp_8_annotated$sample, colnames(Exp_8_annotated), sep = "_")
+ix_Exp_9 <- paste(Exp_9_annotated$sample, colnames(Exp_9_annotated), sep = "_")
+ix_Exp_10 <- paste(Exp_10_annotated$sample, colnames(Exp_10_annotated), sep = "_")
+
 
 #Rename cells
-run8_annotated_ix <- RenameCells(run8_annotated, new.names = ix_run8)
-run9_annotated_ix <- RenameCells(run9_annotated, new.names = ix_run9)
 
-C1001_annotated_ix <- RenameCells(C1001_annotated, new.names = ix_1001)
-C1002_annotated_ix <- RenameCells(C1002_annotated, new.names = ix_1002)
-C1003_annotated_ix <- RenameCells(C1003_annotated, new.names = ix_1003)
+Exp_1_annotated_ix  <- RenameCells(Exp_1_annotated, new.names = ix_Exp_1)
+Exp_2_annotated_ix  <- RenameCells(Exp_2_annotated, new.names = ix_Exp_2)
+Exp_3_annotated_ix  <- RenameCells(Exp_3_annotated, new.names = ix_Exp_3)
+Exp_4_annotated_ix  <- RenameCells(Exp_4_annotated, new.names = ix_Exp_4)
+Exp_5_annotated_ix  <- RenameCells(Exp_5_annotated, new.names = ix_Exp_5)
 
-y2_annotated_ix <- RenameCells(y2_annotated, new.names = ix_y2)
-y3_annotated_ix <- RenameCells(y3_annotated, new.names = ix_y3)
-y4_annotated_ix <- RenameCells(y4_annotated, new.names = ix_y4)
-y5_annotated_ix <- RenameCells(y5_annotated, new.names = ix_y5)
-y6_annotated_ix <- RenameCells(y6_annotated, new.names = ix_y6)
+Exp_6_annotated_ix  <- RenameCells(Exp_6_annotated, new.names = ix_Exp_6)
+Exp_7_annotated_ix  <- RenameCells(Exp_7_annotated, new.names = ix_Exp_7)
+
+Exp_8_annotated_ix  <- RenameCells(Exp_8_annotated, new.names = ix_Exp_8)
+Exp_9_annotated_ix  <- RenameCells(Exp_9_annotated, new.names = ix_Exp_9)
+Exp_10_annotated_ix  <- RenameCells(Exp_10_annotated, new.names = ix_Exp_10)
+
 ```
 
 # 3. Merge objects 
 ```{r}
-combined_cartridges_annotated <- merge(C1001_annotated_ix, 
-                             y = c(C1002_annotated_ix, 
-                                   C1003_annotated_ix, 
-                                   run8_annotated_ix, 
-                                   run9_annotated_ix, 
-                                   y2_annotated_ix, 
-                                   y3_annotated_ix, 
-                                   y4_annotated_ix,
-                                   y5_annotated_ix, 
-                                   y6_annotated_ix))
+combined_cartridges_annotated <- merge(Exp_1_annotated_ix, 
+                             y = c(Exp_2_annotated_ix, 
+                                  Exp_3_annotated_ix, 
+                                  Exp_4_annotated_ix, 
+                                  Exp_5_annotated_ix, 
+                                  Exp_6_annotated_ix, 
+                                  Exp_7_annotated_ix, 
+                                  Exp_8_annotated_ix,
+                                  Exp_9_annotated_ix, 
+                                  Exp_10_annotated_ix))
 ```
 
 # 4. Exclude non-common AbSeqs
